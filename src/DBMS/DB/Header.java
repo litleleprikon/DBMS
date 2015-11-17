@@ -1,4 +1,4 @@
-package DBMS;
+package DBMS.DB;
 
 /**
  * Created by dmitriy on 11/17/2015.

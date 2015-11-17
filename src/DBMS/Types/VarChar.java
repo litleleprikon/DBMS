@@ -1,7 +1,6 @@
-package DBMS;
+package DBMS.Types;
 
-public class VarChar {
-    private int size;
+public class VarChar extends Type{
     private char[] data;
 
     public char[] getData() {

@@ -1,4 +1,4 @@
-package DBMS;
+package DBMS.DB;
 
 import java.io.File;
 import java.io.FileInputStream;
