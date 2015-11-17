@@ -9,6 +9,10 @@ public class VarChar extends Type{
 
     public void setData(String data) {
         this.data = data.toCharArray();
+        if (data.length() > size) {
+            int dif = data.length() - size;
+            this.data = data.substring(0, data.length() - dif).toCharArray();
+        }
         if (data.length()<size) {
             this.data = new char[size];
             System.arraycopy(data.toCharArray(),0,this.data,0,data.length());
