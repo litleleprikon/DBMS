@@ -1,6 +1,6 @@
-package DBMS;
+package DBMS.DB;
 
-import DBMS.Types.Type;
+import DBMS.DB.Types.Type;
 
 /**
  * Created by dmitriy on 11/17/2015.

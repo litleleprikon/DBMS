@@ -1,4 +1,4 @@
-package DBMS.Types;
+package DBMS.DB.Types;
 
 /**
  * Created by dmitriy on 11/17/2015.
