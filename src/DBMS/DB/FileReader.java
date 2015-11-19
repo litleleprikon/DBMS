@@ -22,6 +22,15 @@ public class FileReader {
     }
 
     /**
+     * Parses array of bytes to integer
+     * @param buffer - array of bytes to parse
+     * @return parsed integer
+     */
+    private int parseInt(byte[] buffer) {
+        String in = new String(buffer);
+        return in.indexOf(0x00) == -1 ? Integer.valueOf(in) : Integer.valueOf(in.substring(0, in.indexOf(0x00)));
+    }
+    /**
      * Reads header(first 30 bytes) of Database file @code db
      */
     public void readHeader() {
@@ -31,21 +40,15 @@ public class FileReader {
             raf = new RandomAccessFile(db, "rw");
             byte[] buffer = new byte[10];
             raf.read(buffer);
-            String in = new String(buffer);
-            in = in.indexOf(0x00) == -1 ? in : in.substring(0, in.indexOf(0x00));
-            int pageSize = Integer.valueOf(in);
+            int pageSize = parseInt(buffer);
 
             buffer = new byte[10];
             raf.read(buffer);
-            in = new String(buffer);
-            in = in.indexOf(0x00) == -1 ? in : in.substring(0, in.indexOf(0x00));
-            int pageCount = Integer.valueOf(in);
+            int pageCount = parseInt(buffer);
 
             buffer = new byte[10];
             raf.read(buffer);
-            in = new String(buffer);
-            in = in.indexOf(0x00) == -1 ? in : in.substring(0, in.indexOf(0x00));
-            int metaPointer = Integer.valueOf(in);
+            int metaPointer = parseInt(buffer);
 
             header = new Header(pageSize, pageCount, metaPointer);
 
@@ -71,7 +74,6 @@ public class FileReader {
         if (header.getMetaPage() == 0) return; //TODO exception
 
         RandomAccessFile raf = null;
-
         try {
             raf = new RandomAccessFile(db, "rw");
             byte[] page = new byte[header.getPageSize()];
@@ -81,7 +83,7 @@ public class FileReader {
              * 18 - start of table pages segment
              * 19 - start of index segment
              */
-            Metadata meta = new Metadata();
+            metadata = new Metadata();
             int segment;
             raf.read(page);
 
@@ -125,7 +127,7 @@ public class FileReader {
                             int size = Integer.valueOf(sType.substring(sType.indexOf('('), sType.indexOf(')')));
                             type = new VarChar(size);
                         }
-                        meta.addArgument(table, new Argument(name, type));
+                        metadata.addArgument(table, new Argument(name, type));
                     } //TODO read next table and next segments
             }
 
