@@ -1,6 +1,7 @@
 package DBMS;
 
 import DBMS.DB.Types.VarChar;
+import DBMS.Parser.SqlParser;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -15,5 +16,8 @@ public class Main {
 //        System.out.println(chr.toString());
 //        char temp = chr.getData()[38];
 //        System.out.println(temp);
+
+//        SqlParser parser = new SqlParser();
+//        parser.parse("SELECT 'Huy' FROM 'Pizda, Djigurda' WHERE 'sosni=huyca'");
     }
 }
