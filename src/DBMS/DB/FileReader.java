@@ -6,6 +6,7 @@ import DBMS.DB.Types.Type;
 import DBMS.DB.Types.VarChar;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -19,6 +20,24 @@ public class FileReader {
 
     public FileReader(File db) {
         this.db = db;
+    }
+
+    /**
+     * Reads specified page of the file @code db
+     * @param num - page number
+     * @return array of bytes corresponding to specified page
+     * @throws IOException
+     */
+    private byte[] readPage(int num) throws IOException {
+        RandomAccessFile raf = new RandomAccessFile(db, "rw");
+
+        if (header == null) readHeader();
+
+        raf.seek(num * header.getPageSize());
+        byte[] page = new byte[header.getPageSize()];
+        raf.read(page);
+
+        return page;
     }
 
     /**
