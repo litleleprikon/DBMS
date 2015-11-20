@@ -20,7 +20,7 @@ public class FileIO {
 
     /**
      * CONSTANTS
-     * Special symbols for dividing data
+     * Special symbols for data separating
      */
     private final static byte ARGUMENTS_SEGMENT_START = 1;
     private final static byte ARGUMENT_TYPE_SEPARATOR = 2;
@@ -62,7 +62,8 @@ public class FileIO {
      */
     private int parseInt(byte[] buffer) {
         String in = new String(buffer);
-        return in.indexOf(0x00) == -1 ? Integer.valueOf(in) : Integer.valueOf(in.substring(0, in.indexOf(0x00)));
+        if (in.indexOf(0) == 0) return -1;
+        else return in.indexOf(0) == -1 ? Integer.valueOf(in) : Integer.valueOf(in.substring(0, in.indexOf(0x00)));
     }
     /**
      * Reads header(first 30 bytes) of Database file @code db
@@ -105,75 +106,17 @@ public class FileIO {
     public void readMeta() {
         readHeader();
 
-        if (header.getMetaPage() == 0) return; //TODO exception
+        if (header.getMetaPage() == -1) return; //TODO exception
 
-        RandomAccessFile raf = null;
+
         try {
-            raf = new RandomAccessFile(db, "rw");
             byte[] page = readPage(header.getMetaPage());
 
-            /**
-             * 17 - start of table structure segment
-             * 18 - start of table pages segment
-             * 19 - start of index segment
-             */
             metadata = new Metadata();
-            int segment;
-            raf.read(page);
-
-            if (page[0] > 19) return; //TODO exception
-            segment = page[0];
-
-            switch (segment) {
-                case 17:
-                    StringBuilder sb = new StringBuilder();
-                    int i = 1;
-                    while (page[i] > 32) {
-                        sb.append((char)page[i]);
-                        i++;
-                    }
-                    String table = sb.toString();
-
-
-                    while (i > 19) {
-                        //parse name of argument
-                        sb = new StringBuilder();
-                        i++;
-                        while (page[i] > 32) {
-                            sb.append((char)page[i]);
-                            i++;
-                        }
-                        String name = sb.toString();
-
-                        //parse type of argument
-                        sb = new StringBuilder();
-                        i++;
-                        while (page[i] > 32) {
-                            sb.append((char)page[i]);
-                            i++;
-                        }
-                        Type type = null;
-                        String sType = sb.toString();
-
-                        if (sType.equals("int")) type = new Int();
-                        if (sType.equals("varchar")) type = new FixedVarChar();
-                        if (sType.indexOf('(') != -1) {
-                            int size = Integer.valueOf(sType.substring(sType.indexOf('('), sType.indexOf(')')));
-                            type = new VarChar(size);
-                        }
-                        metadata.addArgument(table, new Argument(name, type));
-                    } //TODO read next table and next segments
-            }
-
+            parseMeta(page, 0);
 
         } catch (IOException e) {
-            //TODO exception handle
-        } finally {
-            if (raf != null) try {
-                raf.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         }
     }
 
@@ -183,12 +126,13 @@ public class FileIO {
      * @param i - position on page
      */
     private void parseMeta(byte[] page, int i) {
-        //TODO add checking for next block. Could be that there wouldn't be some of them
         if (page[i] == 0 || i == page.length - 10) {//there isn't anything left on this page, move to the next
             byte[] nextPage = new byte[10];
             System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
             try {
-                parseMeta(readPage(parseInt(nextPage)), 0);
+                int next = parseInt(nextPage);
+                if (next == -1) return; //if there is no next page finish parsing
+                else parseMeta(readPage(next), 0); //else continue parsing
             } catch (IOException e) {
                 e.printStackTrace(); //TODO exception handle
             }

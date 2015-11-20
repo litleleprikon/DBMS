@@ -11,6 +11,7 @@ public class Metadata {
     Map<String, TreeSet<Argument>> tableStructure;
     Map<String, IndexType> indexType;
     Map<String, TreeSet<Integer>> tabIndPages;
+    private boolean wasChanged = false;
 
     enum IndexType {
         Tree, Hash
