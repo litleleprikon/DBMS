@@ -181,78 +181,112 @@ public class FileIO {
      * @param i - position on page
      */
     private void parseMeta(byte[] page, int i) {
-        byte curSeg = page[i];
+        if (page[i] == 0 || i == page.length - 10) {//there isn't anything left on this page, move to the next
+            byte[] nextPage = new byte[10];
+            System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
+            try {
+                parseMeta(readPage(parseInt(nextPage)), 0);
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO exception handle
+            }
+        } else {
+            byte curSeg = page[i];
 
-        if (curSeg < TABLE_STRUCTURE_SEGMENT || curSeg > INDEX_PAGES_SEGMENT) return; //TODO exception
+            if (curSeg < TABLE_STRUCTURE_SEGMENT || curSeg > INDEX_PAGES_SEGMENT) return; //TODO exception
 
-        switch (curSeg) {
-            case TABLE_STRUCTURE_SEGMENT:
-                parseTableStructure(page, ++i, null, false);
-                break;
+            switch (curSeg) {
+                case TABLE_STRUCTURE_SEGMENT:
+                    parseTableStructure(page, ++i, null);
+                    break;
 
-            case TABLE_PAGES_SEGMENT:
-                parseTablePages(page, ++i, null, false);
-                break;
+                case TABLE_PAGES_SEGMENT:
+                    parseTablePages(page, ++i, null, false);
+                    break;
 
-            case INDEX_PAGES_SEGMENT:
-                parseIndexPages(page, ++i, null, false);
-                break;
+                case INDEX_PAGES_SEGMENT:
+                    parseIndexPages(page, ++i, null, false);
+                    break;
+            }
         }
     }
 
-    private void parseTableStructure(byte[] page, int i, String curStr, boolean inProgress) {
+    /**
+     * Parses Table Structure block represented like (whitespaces are for readability, there won't be any actually):
+     * 17 Table 1 argument 2 type 3 argument 2 type 3 ... argument 2 type 3 4 Table 1 argument 2 type 3 ... argument 2 type 3 4 23
+     * 17 - start of block @code TABLE_STRUCTURE_SEGMENT, 23 - end of block @code END_OF_BLOCK
+     * 1 - start of arguments section @code ARGUMENT_SEGMENT_START
+     * 2 - argument-type separator @code ARGUMENT_TYPE_SEPARATOR
+     * 3 - arguments separator @code ARGUMENTS_SEPARATOR
+     * @param page - page from which structure is being parsed
+     * @param i - position on the page
+     * @param curStr - current structure (read table) being parsed
+     */
+    private void parseTableStructure(byte[] page, int i, String curStr) {
         if (page[i] == END_OF_BLOCK) parseMeta(page, ++i);
 
+        boolean inProgress = curStr != null;
         //base case, no parsing is started or previous segment was finished
         if (!inProgress) {
-            inProgress = true;
-
             //Parse table name
             curStr = getWord(page, i, ARGUMENTS_SEGMENT_START);
             i += curStr.length();
 
             //Parse arguments
-            while (true) {
-                if (page[i + 1] == END_OF_ARGUMENTS_SEGMENT) {inProgress = false; break;} //parsing for current table is finished
-                if (page[i + 1] == 0 || i + 1 == page.length - 10) break; //parsing for current table is not finished, need to move to the next page
+            parseArguments(page, i, curStr);
 
-                //parse argument name
-                i++;
-                String name = getWord(page, i, ARGUMENT_TYPE_SEPARATOR);
-                i += name.length();
+        } else {//parsing of table didn't finish on previous page
+            parseArguments(page, i, curStr);
+        }
+    }
 
-                //parse argument type
-                i++;
-                String sType = getWord(page, i, ARGUMENTS_SEPARATOR);
-                Type type = chooseType(sType);
-                i += sType.length();
+    /**
+     * Parses arguments segment of Table Structure block
+     * @param page - page from which parsing is going
+     * @param i - position on the page
+     * @param curStr - current structure (read table) for which arguments are being parsed
+     */
+    private void parseArguments(byte[] page, int i, String curStr) {
+        boolean inProgress = true;
+        while (true) {
+            if (page[i + 1] == END_OF_ARGUMENTS_SEGMENT) {inProgress = false; break;} //parsing for current table is finished
+            if (page[i + 1] == 0 || i + 1 == page.length - 10) break; //parsing for current table is not finished, need to move to the next page
 
-                //add information in meta
-                metadata.addArgument(curStr, new Argument(name, type));
+            //parse argument name
+            i++;
+            String name = getWord(page, i, ARGUMENT_TYPE_SEPARATOR);
+            i += name.length();
+
+            //parse argument type
+            i++;
+            String sType = getWord(page, i, ARGUMENTS_SEPARATOR);
+            Type type = chooseType(sType);
+            i += sType.length();
+
+            //add information in meta
+            metadata.addArgument(curStr, new Argument(name, type));
+        }
+
+        if (inProgress) { //continue parsing for current table on the next page
+            byte[] nextPage = new byte[10];
+            System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
+            try {
+                parseTableStructure(readPage(parseInt(nextPage)), 0, curStr);
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO exception handle
             }
 
-            if (inProgress) { //continue parsing for current table on the next page
+        } else { //parse next table or segment
+            if (page[i + 1] == 0 || i + 1 == page.length - 10) { //moving to next page if needed
                 byte[] nextPage = new byte[10];
                 System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
                 try {
-                    parseTableStructure(readPage(parseInt(nextPage)), 0, curStr, inProgress);
+                    page = readPage(parseInt(nextPage));
                 } catch (IOException e) {
                     e.printStackTrace(); //TODO exception handle
                 }
-
-            } else { //parse next table or segment
-                if (page[i + 1] == 0 || i + 1 == page.length - 10) { //moving to next page
-                    byte[] nextPage = new byte[10];
-                    System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
-                    try {
-                        page = readPage(parseInt(nextPage));
-                    } catch (IOException e) {
-                        e.printStackTrace(); //TODO exception handle
-                    }
-                    i = 0;
-                }
-                parseTableStructure(page, i == 0 ? i : ++i, null, false);
+                i = 0;
             }
+            parseTableStructure(page, i == 0 ? i : ++i, null);
         }
     }
 
