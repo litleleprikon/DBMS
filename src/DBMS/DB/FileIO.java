@@ -22,14 +22,16 @@ public class FileIO {
      * CONSTANTS
      * Special symbols for dividing data
      */
-    private final static byte ARGUMENTS_SEGMENT_START = 0x01;
-    private final static byte ARGUMENT_TYPE_SEPARATOR = 0x02;
-    private final static byte ARGUMENTS_SEPARATOR = 0x03;
-    private final static byte END_OF_ARGUMENTS_SEGMENT = 0x04;
-    private final static byte END_OF_BLOCK = 0x17;
-    private final static byte TABLE_STRUCTURE_SEGMENT = 0x11;
-    private final static byte TABLE_PAGES_SEGMENT = 0x12;
-    private final static byte INDEX_PAGES_SEGMENT = 0x13;
+    private final static byte ARGUMENTS_SEGMENT_START = 1;
+    private final static byte ARGUMENT_TYPE_SEPARATOR = 2;
+    private final static byte ARGUMENTS_SEPARATOR = 3;
+    private final static byte END_OF_ARGUMENTS_SEGMENT = 4;
+    private final static byte END_OF_BLOCK = 23;
+    private final static byte TABLE_STRUCTURE_SEGMENT = 17;
+    private final static byte TABLE_PAGES_SEGMENT = 18;
+    private final static byte INDEX_PAGES_SEGMENT = 19;
+    private final static byte TREE = 6;
+    private final static byte HASH = 21;
 
     public FileIO(File db) {
         this.db = db;
@@ -181,6 +183,7 @@ public class FileIO {
      * @param i - position on page
      */
     private void parseMeta(byte[] page, int i) {
+        //TODO add checking for next block. Could be that there wouldn't be some of them
         if (page[i] == 0 || i == page.length - 10) {//there isn't anything left on this page, move to the next
             byte[] nextPage = new byte[10];
             System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
@@ -200,11 +203,11 @@ public class FileIO {
                     break;
 
                 case TABLE_PAGES_SEGMENT:
-                    parseTablePages(page, ++i, null, false);
+                    parseTablePages(page, ++i, null);
                     break;
 
                 case INDEX_PAGES_SEGMENT:
-                    parseIndexPages(page, ++i, null, false);
+                    parseIndexPages(page, ++i, null);
                     break;
             }
         }
@@ -316,11 +319,113 @@ public class FileIO {
         return sb.toString();
     }
 
-    private void parseTablePages(byte[] page, int i, String curStr, boolean inProgress) {
+    /**
+     * Parses Table Pages block represented like (whitespaces are for readability, there won't be any actually):
+     * 18 Table 1 page 3 page 3 ... page 3 4 Table 1 page 3 ... page 3 4 23
+     * 18 - start of block @code TABLE_PAGES_SEGMENT, 23 - end of block @code END_OF_BLOCK
+     * 1 - start of pages section @code ARGUMENT_SEGMENT_START
+     * 3 - pages separator @code ARGUMENTS_SEPARATOR
+     * @param page - page from which structure is being parsed
+     * @param i - position on the page
+     * @param curStr - current structure (read table) being parsed
+     */
+    private void parseTablePages(byte[] page, int i, String curStr) {
+        if (page[i] == END_OF_BLOCK) parseMeta(page, ++i);
 
+        boolean inProgress = curStr != null;
+        if (!inProgress) { //no parsing is started or previous segment was finished
+            //Parse table name
+            curStr = getWord(page, i, ARGUMENTS_SEGMENT_START);
+            i += curStr.length();
+
+            //Parse pages
+            parsePages(page, i, curStr, true);
+
+        } else {//parsing of table didn't finish on previous page
+            parsePages(page, i, curStr, true);
+        }
     }
 
-    private void parseIndexPages(byte[] page, int i, String curStr, boolean inProgress) {
+    /**
+     * Parses Index Pages block represented like (whitespaces are for readability, there won't be any actually):
+     * 19 Index [21]||[6] 1 page 3 page 3 ... page 3 4 Index [21]||[6] 1 page 3 ... page 3 4 23
+     * 19 - start of block @code TABLE_PAGES_SEGMENT, 23 - end of block @code END_OF_BLOCK
+     * 6 - index is tree marker @code TREE
+     * 21 - index is hash marker @code HASH
+     * 1 - start of pages section @code ARGUMENT_SEGMENT_START
+     * 3 - pages separator @code ARGUMENTS_SEPARATOR
+     * @param page - page from which structure is being parsed
+     * @param i - position on the page
+     * @param curStr - current structure (read table) being parsed
+     */
+    private void parseIndexPages(byte[] page, int i, String curStr) {
+        if (page[i] == END_OF_BLOCK) parseMeta(page, ++i);
 
+        boolean inProgress = curStr != null;
+        //base case, no parsing is started or previous segment was finished
+        if (!inProgress) {
+            //Parse index name
+            curStr = getWord(page, i, ARGUMENTS_SEGMENT_START);
+            i += curStr.length();
+
+            //Parse index type
+            if (page[i] == TREE) metadata.addIndexType(curStr, Metadata.IndexType.Tree);
+            else if (page[i] == HASH) metadata.addIndexType(curStr, Metadata.IndexType.Hash);
+            i++;
+
+            //Parse pages
+            parsePages(page, i, curStr, false);
+
+        } else {//parsing of table didn't finish on previous page
+            parsePages(page, i, curStr, false);
+        }
+    }
+
+    /**
+     * Parses pages segment of Table Pages block or Index Pages block
+     * @param page - page from which parsing is going
+     * @param i - position on the page
+     * @param curStr - current structure (read table) for which arguments are being parsed
+     * @param isTable - true if current block is Table Pages, false if current block is Index Pages
+     */
+    private void parsePages(byte[] page, int i, String curStr, boolean isTable) {
+        boolean inProgress = true;
+        while (true) {
+            if (page[i + 1] == END_OF_ARGUMENTS_SEGMENT) {inProgress = false; break;} //parsing for current structure is finished
+            if (page[i + 1] == 0 || i + 1 == page.length - 10) break; //parsing for current structure is not finished, need to move to the next page
+
+            //parse page number
+            i++;
+            String sNumber = getWord(page, i, ARGUMENTS_SEPARATOR);
+            int number = Integer.valueOf(sNumber);
+            i += sNumber.length();
+
+            metadata.addPage(curStr, number);
+        }
+
+        if (inProgress) { //continue parsing for current structure on the next page
+            byte[] nextPage = new byte[10];
+            System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
+            try {
+                parseTablePages(readPage(parseInt(nextPage)), 0, curStr);
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO exception handle
+            }
+
+        } else { //parse next structure or segment
+            if (page[i + 1] == 0 || i + 1 == page.length - 10) { //moving to next page if needed
+                byte[] nextPage = new byte[10];
+                System.arraycopy(page, page.length - 10, nextPage, 0, nextPage.length);
+                try {
+                    page = readPage(parseInt(nextPage));
+                } catch (IOException e) {
+                    e.printStackTrace(); //TODO exception handle
+                }
+                i = 0;
+            }
+
+            if (isTable) parseTablePages(page, i == 0 ? i : ++i, null);
+            else parseIndexPages(page, i == 0 ? i : ++i, null);
+        }
     }
 }
