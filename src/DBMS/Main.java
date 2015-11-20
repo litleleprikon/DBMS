@@ -17,7 +17,12 @@ public class Main {
 //        char temp = chr.getData()[38];
 //        System.out.println(temp);
 
-//        SqlParser parser = new SqlParser();
-//        parser.parse("SELECT 'Huy' FROM 'Pizda, Djigurda' WHERE 'sosni=huyca'");
+        SqlParser parser = new SqlParser();
+        parser.parse("SELECT p.id, p.title, p.abstract, pt.name AS p_type from project.publication AS p " +
+                "LEFT JOIN project.publication_type as pt ON p.type = pt.id " +
+                "ORDER BY p.{0:s} " +
+                "LIMIT %(limit)s " +
+                "OFFSET %(offset)s");
+        System.out.println();
     }
 }

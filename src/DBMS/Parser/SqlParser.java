@@ -7,11 +7,12 @@ public class SqlParser {
 
     private final String[] keywords = {
             "SELECT", "FROM",
-            "WHERE", "GROUP BY",
+            "WHERE", "GROUP", "BY",
+            "ORDER",
             "LIMIT", "OFFSET",
-            "LEFT JOIN", "ANY",
-            "CREATE TABLE", "ALTER TABLE",
-            "INSERT", "UPDATE", "DELETE"
+            "LEFT", "JOIN", "ANY",
+            "CREATE", "TABLE", "ALTER",
+            "INSERT", "UPDATE", "DELETE", "AS", "VALUES", "INTO", "ON"
     };
 
     /**
@@ -24,17 +25,39 @@ public class SqlParser {
         LinkedList<String> arguments = new LinkedList<>();
         String operator = "";
 
-        for (String s : splittedQuery) {
-            if ((Arrays.asList(keywords).contains(s.toUpperCase()))) {
-                parseOperator(operator, arguments);
-                arguments.clear();
-                operator = s.toUpperCase();
+//        for (String s : splittedQuery) {
+//            if ((Arrays.asList(keywords).contains(s.toUpperCase()))) {
+//                parseOperator(operator, arguments);
+//                arguments.clear();
+//                operator = s.toUpperCase();
+//            } else {
+//                parseArguments(arguments, s);
+//            }
+//        }
+
+
+        for (int i = 0; i < splittedQuery.length; i++) {
+            if ((Arrays.asList(keywords).contains(splittedQuery[i].toUpperCase()))) {
+                try {
+                    if ((Arrays.asList(keywords).contains(splittedQuery[i + 1].toUpperCase()))) {
+                        parseOperator(operator, arguments);
+                        arguments.clear();
+                        operator = splittedQuery[i].toUpperCase() + " " + splittedQuery[i + 1].toUpperCase();
+                        i++;
+                    } else {
+                        parseOperator(operator, arguments);
+                        arguments.clear();
+                        operator = splittedQuery[i].toUpperCase();
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    break;
+                }
             } else {
-                parseArguments(arguments, s);
+                parseArguments(arguments, splittedQuery[i]);
             }
         }
 
-        parseOperator(operator,arguments);
+        parseOperator(operator, arguments);
 
 
     }
@@ -47,8 +70,8 @@ public class SqlParser {
     }
 
     public void parseArguments(LinkedList<String> arguments, String s) {
-        s=s.replaceAll("([,]|[']|[\"])"," ");
-        s=s.trim();
+        s = s.replaceAll("([,]|[']|[\"])", " ");
+        s = s.trim();
         arguments.addLast(s);
     }
 }
