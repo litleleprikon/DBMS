@@ -1,13 +1,8 @@
 package DBMS;
 
-import DBMS.DB.Types.VarChar;
 import DBMS.Parser.SqlParser;
-
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
+
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -24,6 +19,14 @@ public class Main {
                 "LIMIT %(limit)s " +
                 "OFFSET %(offset)s");
         parser.parse("SELECT EXIST (SELECT * FROM publications)");
+
+        parser.parse("SELECT p.id, p.title, p.abstract, pt.name AS p_type from project.publications AS p\n" +
+                " LEFT JOIN project.publication_type as pt ON p.type = pt.id" +
+                " \n" +
+                " LEFT JOIN (VALUES (0, 1), (1, 2), (2, 3), (3, 4)) as x(id, ordering) ON p.id = x.id\n" +
+                " \n" +
+                " WHERE p.id = ANY(%s)\n" +
+                " ORDER BY x.ordering");
         System.out.println();
     }
 }
