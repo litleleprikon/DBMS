@@ -7,4 +7,9 @@ public class Index {
     String name;
     Table table;
     Argument argument;
+    IndexType type;
+
+    enum IndexType {
+        Tree, Hash
+    }
 }

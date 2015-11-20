@@ -1,16 +1,13 @@
 package DBMS.DB.InnerStructure;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by dmitriy on 20-Nov-15.
  */
 public class Table {
     private String name;
-    private ArrayList<Argument> arguments;
+    private Map<String, Argument> arguments;
     private Set<Tuple> tuples;
     private LinkedList<Argument> primaryKeys;
     private LinkedList<Argument> foreignKeys;
@@ -18,17 +15,21 @@ public class Table {
 
     public Table(String name) {
         this.name = name;
-        arguments = new ArrayList<>();
+        arguments = new LinkedHashMap<>();
         tuples = new HashSet<>();
         foreignKeys = new LinkedList<>();
         primaryKeys = new LinkedList<>();
+    }
+
+    public void addArgument(Argument argument) {
+        arguments.put(argument.getName(), argument);
     }
 
     public String getName() {
         return name;
     }
 
-    public ArrayList<Argument> getArguments() {
+    public Map<String, Argument> getArguments() {
         return arguments;
     }
 

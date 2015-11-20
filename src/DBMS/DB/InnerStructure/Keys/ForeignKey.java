@@ -16,4 +16,8 @@ public class ForeignKey extends Key{
         super(table, keyArguments);
         this.foreignTable = foreignTable;
     }
+
+    public Table getForeignTable() {
+        return foreignTable;
+    }
 }
