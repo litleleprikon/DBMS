@@ -1,4 +1,4 @@
-package DBMS.DB.Types;
+package DBMS.DB.InnerStructure.Types;
 
 public class VarChar extends Type{
     private char[] data;

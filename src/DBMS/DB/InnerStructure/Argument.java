@@ -1,6 +1,6 @@
-package DBMS.DB;
+package DBMS.DB.InnerStructure;
 
-import DBMS.DB.Types.Type;
+import DBMS.DB.InnerStructure.Types.Type;
 
 /**
  * Created by dmitriy on 11/17/2015.
