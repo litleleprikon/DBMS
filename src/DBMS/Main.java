@@ -23,6 +23,7 @@ public class Main {
                 "ORDER BY p.{0:s} " +
                 "LIMIT %(limit)s " +
                 "OFFSET %(offset)s");
+        parser.parse("SELECT EXIST (SELECT * FROM publications)");
         System.out.println();
     }
 }
