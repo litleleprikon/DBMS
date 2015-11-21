@@ -18,6 +18,8 @@ public class Database {
     private Header header;
     private Metadata metadata;
 
+    public final static String[] catalog = {"TableArgument", "TableKey", "TableIndex"};
+
     private Database(String name, int pageSize) {
         this.name = name;
         inOut = new FileIO(this);
@@ -28,17 +30,17 @@ public class Database {
     public static Database create(String name, int pageSize) {
         Database database = new Database(name, pageSize);
 
-        Table tabArg = new Table("TableArgument");
+        Table tabArg = new Table(catalog[0]);
         tabArg.addArgument(new Argument("Table", new FixedVarChar()));
         tabArg.addArgument(new Argument("Argument", new FixedVarChar()));
         database.catalogTables.add(tabArg);
 
-        Table tabKey = new Table("TableKey");
+        Table tabKey = new Table(catalog[1]);
         tabKey.addArgument(new Argument("Table", new FixedVarChar()));
         tabKey.addArgument(new Argument("Key", new FixedVarChar()));
         database.catalogTables.add(tabKey);
 
-        Table tabInd = new Table("TableIndex");
+        Table tabInd = new Table(catalog[2]);
         tabInd.addArgument(new Argument("Table", new FixedVarChar()));
         tabInd.addArgument(new Argument("Index", new FixedVarChar()));
         database.catalogTables.add(tabInd);

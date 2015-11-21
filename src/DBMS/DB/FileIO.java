@@ -50,6 +50,8 @@ public class FileIO {
         if (in.indexOf(0) == 0) return -1;
         else return in.indexOf(0) == -1 ? Integer.valueOf(in) : Integer.valueOf(in.substring(0, in.indexOf(0x00)));
     }
+
+
     /**
      * Reads header(first 30 bytes) of Database file @code db
      */
@@ -97,6 +99,7 @@ public class FileIO {
             byte[] page = readPage(database.getHeader().getMetaPage());
 
             Metadata metadata = new Metadata(this);
+            metadata.addMetaPage(database.getHeader().getMetaPage());
             metadata.parseMeta(page, 0, null);
             database.setMetadata(metadata);
 
@@ -105,5 +108,7 @@ public class FileIO {
         }
     }
 
-
+    public Database getDatabase() {
+        return database;
+    }
 }

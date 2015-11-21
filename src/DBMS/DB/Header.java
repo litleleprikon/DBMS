@@ -14,6 +14,8 @@ public class Header {
         this.metaPage = metaPage;
     }
 
+    public void incrementPageCount() {pageCount++;}
+
     public int getPageSize() {
         return pageSize;
     }
