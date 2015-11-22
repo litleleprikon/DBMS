@@ -80,9 +80,6 @@ public class SqlParser {
                         i--;
                     }
                 }
-                else if (splittedQuery[i].startsWith("(")||splittedQuery[i].equals("(")) {
-                    operator.setInnerQuery(parseInnerQuery(splittedQuery,i));
-                }
             } catch (ArrayIndexOutOfBoundsException e) {
                 parsed.add(operator);
             }
@@ -136,12 +133,16 @@ public class SqlParser {
 
     public ArrayList<Operator> parseInnerQuery(String[] query, int i) {
         String innerQuery = "";
-        query[i] = query[i].substring(1);
-        while (!query[i].endsWith(")")) {
-            innerQuery += query[i]+" ";
+        String[] temp = new String[query.length];
+
+        System.arraycopy(query,i,temp,i,query.length-i);
+
+        temp[i] = temp[i].substring(1);
+        while (!temp[i].endsWith(")")) {
+            innerQuery += temp[i]+" ";
             i++;
         }
-        innerQuery += query[i].substring(0, query[i].length()-1);
+        innerQuery += temp[i].substring(0, temp[i].length()-1);
         return parse(innerQuery);
     }
 
