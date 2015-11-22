@@ -57,4 +57,8 @@ public class Table implements Iterator<Tuple>{
     public Tuple next() {
         return tuples.get(counter++);
     }
+
+    public int size() {
+        return tuples.size();
+    }
 }
