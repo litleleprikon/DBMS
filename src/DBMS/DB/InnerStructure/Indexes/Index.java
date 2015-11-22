@@ -11,9 +11,9 @@ import java.util.LinkedList;
  */
 public abstract class Index<K extends Comparable<K>, V> extends AbstractMap {
     private String name;
-    private LinkedList<Argument> arguments;
+    private Argument arguments;
 
-    public Index(String name, LinkedList<Argument> arguments) {
+    public Index(String name, Argument arguments) {
         this.name = name;
         this.arguments = arguments;
     }

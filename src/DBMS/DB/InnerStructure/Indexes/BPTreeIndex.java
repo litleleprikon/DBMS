@@ -8,6 +8,7 @@ package DBMS.DB.InnerStructure.Indexes;
 
 import DBMS.DB.InnerStructure.Argument;
 import DBMS.DB.InnerStructure.Keys.Key;
+import com.sun.org.apache.xpath.internal.Arg;
 
 import java.io.StringWriter;
 import java.util.*;
@@ -30,15 +31,13 @@ public class BPTreeIndex<K extends Comparable<K>, V> extends Index
 
     /**
      * Creates a new BPTreeIndex.
-     * @param order Order of internal guide nodes.
-     * @param leafOrder Order of leaf nodes.
      * @throws IllegalArgumentException thrown if order < 3 or leafOrder < 1.
      */
-    BPTreeIndex(String name, LinkedList<Argument> arguments, int order, int leafOrder)
+    BPTreeIndex(String name, Argument argument)
     {
-        super(name, arguments);
-        this.order = order;
-        this.leafOrder = leafOrder;
+        super(name, argument);
+        this.order = 3;
+        this.leafOrder = 3;
 
         root = firstLeaf = new LeafNode();
     }
