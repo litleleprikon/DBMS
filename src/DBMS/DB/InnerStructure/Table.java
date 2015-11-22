@@ -1,62 +1,52 @@
 package DBMS.DB.InnerStructure;
 
-import DBMS.DB.InnerStructure.Keys.ForeignKey;
-import DBMS.DB.InnerStructure.Keys.Key;
-import DBMS.DB.InnerStructure.Keys.PrimaryKey;
-
 import java.util.*;
 
 /**
  * Created by dmitriy on 20-Nov-15.
+ * Class for tables
  */
-public class Table {
+public class Table implements Iterator<Tuple>{
     private String name;
     private Map<String, Argument> arguments;
-    private Set<Tuple> tuples;
-    private PrimaryKey primaryKey;
-    private LinkedList<ForeignKey> foreignKeys;
+    private LinkedList<Tuple> tuples;
+    private LinkedList<Argument> primaryKeys;
+    private LinkedList<Argument> foreignKeys;
     private LinkedList<Index> indexes;
+    private int counter;
 
     public Table(String name) {
         this.name = name;
         arguments = new LinkedHashMap<>();
-        tuples = new HashSet<>();
+        tuples = new LinkedList<>();
         foreignKeys = new LinkedList<>();
+        primaryKeys = new LinkedList<>();
+        counter = 0;
     }
 
     public void addArgument(Argument argument) {
         arguments.put(argument.getName(), argument);
     }
 
-    public void addPrimaryKey(PrimaryKey key) {
-        primaryKey = key;
-    }
-
-    public void addForeignKey(ForeignKey key) {
-        foreignKeys.add(key);
-    }
-
     public String getName() {
         return name;
-    }
-
-    public PrimaryKey getPrimaryKey() {
-        return primaryKey;
-    }
-
-    public LinkedList<ForeignKey> getForeignKeys() {
-        return foreignKeys;
-    }
-
-    public LinkedList<Index> getIndexes() {
-        return indexes;
     }
 
     public Map<String, Argument> getArguments() {
         return arguments;
     }
 
-    public Set<Tuple> getTuples() {
+    public LinkedList<Tuple> getTuples() {
         return tuples;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return counter < tuples.size()-1;
+    }
+
+    @Override
+    public Tuple next() {
+        return tuples.get(counter++);
     }
 }
