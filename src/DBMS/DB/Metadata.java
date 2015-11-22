@@ -9,7 +9,7 @@ import java.util.*;
 public class Metadata {
     private FileIO inOut;
     private Map<String, Integer> pages;
-    private List<Integer> metaPages;
+    private ArrayList<Integer> metaPages;
 
     public Metadata(FileIO inOut) {
         this.inOut = inOut;
@@ -84,7 +84,7 @@ public class Metadata {
         metaPages.add(page);
     }
 
-    public List<Integer> getMetaPages() {
+    public ArrayList<Integer> getMetaPages() {
         return metaPages;
     }
 
@@ -92,9 +92,9 @@ public class Metadata {
      * Transforms metadata to writable form
      * @return list of pages of metadata
      */
-    protected LinkedList<byte[]> toWritingForm() {
-        LinkedList<byte[]> pages = new LinkedList<>();
-        Byte[] tab = metaToBytes();
+    protected ArrayList<byte[]> toWritingForm() {
+        ArrayList<byte[]> pages = new ArrayList<>();
+        byte[] tab = metaToBytes();
 
         int size = inOut.getDatabase().getHeader().getPageSize() - FileIO.pointerSize;
         int fullPages = tab.length / size;
@@ -203,7 +203,7 @@ public class Metadata {
      * Transforms all meta into byte array
      * @return
      */
-    private Byte[] metaToBytes() {
+    private byte[] metaToBytes() {
         ArrayList<Byte> tab = new ArrayList<>();
 
         for (String str : pages.keySet()) {
@@ -217,8 +217,10 @@ public class Metadata {
         }
         tab.add(Constants.END_OF_BLOCK);
 
-        Byte[] byteTable = new Byte[tab.size()];
-        byteTable = tab.toArray(byteTable);
+        byte[] byteTable = new byte[tab.size()];
+        for (int i = 0; i < byteTable.length; i++) {
+            byteTable[i] = tab.get(i);
+        }
         return byteTable;
     }
 }

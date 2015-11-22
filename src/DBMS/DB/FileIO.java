@@ -3,6 +3,7 @@ package DBMS.DB;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 /**
  * Created by dmitriy on 11/19/2015.
@@ -95,7 +96,7 @@ public class FileIO {
     /**
      * Reads metadata from Database file @code db
      */
-    public void readMeta() {
+    public void readMetadata() {
         readHeader();
 
         if (database.getHeader().getMetaPage() == -1) return; //TODO exception
@@ -151,6 +152,22 @@ public class FileIO {
                 raf.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    public void writeMetadata() {
+        writeHeader();
+        Metadata metadata = database.getMetadata();
+
+        ArrayList<byte[]> pages = metadata.toWritingForm();
+        ArrayList<Integer> pageNumbers = metadata.getMetaPages();
+
+        for (int i = 0; i < pages.size(); i++) {
+            try {
+                writePage(pageNumbers.get(i), pages.get(i));
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO exception handle
             }
         }
     }

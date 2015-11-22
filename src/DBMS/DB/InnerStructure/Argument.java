@@ -1,5 +1,6 @@
 package DBMS.DB.InnerStructure;
 
+import DBMS.DB.Constants;
 import DBMS.DB.InnerStructure.Types.Type;
 
 /**
@@ -28,5 +29,10 @@ public class Argument {
 
     public void setType(Type type) {
         this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return name + (char)Constants.ARGUMENT_TYPE_SEPARATOR + type.getType();
     }
 }

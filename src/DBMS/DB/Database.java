@@ -2,6 +2,7 @@ package DBMS.DB;
 
 import DBMS.DB.InnerStructure.Argument;
 import DBMS.DB.InnerStructure.Table;
+import DBMS.DB.InnerStructure.Tuple;
 import DBMS.DB.InnerStructure.Types.VarChar;
 
 import java.util.HashMap;
@@ -62,11 +63,21 @@ public class Database {
         return create(name, defaultSize);
     }
 
-    public void createTable(String name) {
+    public void createTable(String name, Argument[] arguments) {
         if (tables.containsKey(name)) return; //TODO exception
-        tables.put(name, new Table(name));
+        Table table = new Table(name);
+        tables.put(name, table);
         metadata.addPage(name, header.getPageCount());
         header.incrementPageCount();
+
+        Table tabArg = catalogTables.get(catalog[0]);
+        for (Argument argument : arguments) {
+            table.addArgument(argument);
+
+            Tuple tabArgTuple = new Tuple(tabArg);
+            tabArgTuple.addValue(tabArg.getArguments().get("Table"), new VarChar(name));
+            tabArgTuple.addValue(tabArg.getArguments().get("Argument"), new VarChar(argument.toString()));
+        }
     }
 
     public String getName() {
