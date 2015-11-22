@@ -1,27 +1,48 @@
-package DBMS.DB.InnerStructure;
+package DBMS.Parser;
+
+import DBMS.DB.InnerStructure.Argument;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class Operator {
     private String type;
-    private LinkedList<Argument> arguments;
+    private LinkedList<QueryArgument> arguments;
     private ArrayList<Operator> innerQuery;
+
+    private ArrayList<Value> values;
+
     private int priority;
 
+    public void setArguments(LinkedList<QueryArgument> arguments) {
+        this.arguments = arguments;
+    }
+
+    public ArrayList<Value> getValues() {
+        return values;
+    }
+
+    public void setValues(ArrayList<Value> values) {
+        this.values = values;
+    }
+
+    public ArrayList<Operator> getInnerQuery() {
+        return innerQuery;
+    }
+
     public Operator(String type, int priority) {
-        this.type = type;
+        this.type = type.toUpperCase();
         this.priority = priority;
     }
 
     public Operator(String type) {
-        this.type=type;
+        this.type=type.toUpperCase();
     }
 
     public Operator() {
     }
 
-    public void addArgument(Argument argument) {
+    public void addArgument(QueryArgument argument) {
         arguments.addLast(argument);
     }
 
@@ -33,11 +54,11 @@ public class Operator {
         this.priority = priority;
     }
 
-    public LinkedList<Argument> getArguments() {
+    public LinkedList<QueryArgument> getArguments() {
         return arguments;
     }
 
-    public void setArguments(LinkedList<Argument> arguments) {
+    public void setQueryArguments(LinkedList<QueryArgument> arguments) {
         this.arguments = arguments;
     }
 

@@ -1,8 +1,5 @@
 package DBMS.DB.InnerStructure.Types;
 
-/**
- * Created by dmitriy on 11/17/2015.
- */
 public abstract class Type<T> {
     protected T data;
 
@@ -11,6 +8,8 @@ public abstract class Type<T> {
     public T getData() {
         return data;
     }
+
+    public abstract String getType();
 
     public void setData(T data) {
         this.data = data;

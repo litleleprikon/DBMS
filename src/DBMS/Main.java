@@ -1,24 +1,49 @@
 package DBMS;
 
+import DBMS.Parser.Operator;
+import DBMS.Parser.QueryArgument;
 import DBMS.Parser.SqlParser;
+import DBMS.Parser.Value;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class Main {
+
+
     public static void main(String[] args) throws IOException {
-//        VarChar chr = new VarChar(50);
-//        chr.setData("azaza");
-//        System.out.println(chr.toString());
-//        char temp = chr.getData()[38];
-//        System.out.println(temp);
 
         SqlParser parser = new SqlParser();
-//        parser.parse("SELECT p.id, p.title, p.abstract, pt.name AS p_type from project.publications AS p\n" +
-//                " LEFT JOIN project.publication_type as pt ON p.type = pt.id" +
-//                " \n" +
-//                " LEFT JOIN (VALUES (0, 1), (1, 2), (2, 3), (3, 4)) as x(id, ordering) ON p.id = x.id\n" +
-//                " \n" +
-//                " WHERE p.id = ANY(%s)\n" +
-//                " ORDER BY x.ordering");
+        ArrayList<Operator> operators;
+
+        operators=parser.parse("SELECT p.id, p.title, p.abstract, pt.name AS p_type FROM project.publications AS p" +
+                " LEFT JOIN project.publication_type as pt ON p.type = pt.id" +
+                " LEFT JOIN (VALUES (0, 1), (1, 2), (2, 3), (3, 4)) as x(id, ordering) ON p.id = x.id" +
+                " WHERE p.id = ANY(%s)" +
+                " ORDER BY x.ordering");
+
+
+        for (Operator operator : operators) {
+            System.out.println(operator.getType());
+            if (operator.getValues()!=null) {
+                for (Value value : operator.getValues()) {
+                    System.out.println(Arrays.toString(value.getValues()));
+                }
+            }
+            if (operator.getInnerQuery()!=null) {
+                for (Operator inner : operator.getInnerQuery()) {
+                    System.out.println(inner.getType());
+                }
+            }
+            if (operator.getArguments()!=null) {
+                for (QueryArgument argument : operator.getArguments()) {
+                    if (argument.getAlias()!=null) System.out.println(argument.getData()+" AS "+argument.getAlias());
+                    else if (argument.getCondition()!=null) System.out.println(argument.getData()+" "+argument.getCondition()+" "+argument.getCompare().getData());
+                    else System.out.println(argument.getData());
+                }
+            }
+        }
     }
 }
