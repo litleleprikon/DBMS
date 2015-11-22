@@ -11,9 +11,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 
-/**
- * Created by litleleprikon on 20/11/15.
- */
 public class Cursor {
 
     public static class NothingFetchException extends Exception {

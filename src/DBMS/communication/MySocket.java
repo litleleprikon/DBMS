@@ -7,10 +7,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/**
- * Created by litleleprikon on 16/11/15.
- * MySocket class for DBMS
- */
 public class MySocket {
     private static final int SOCK_NUM = 5657;
     private ServerSocket serverSocket;
