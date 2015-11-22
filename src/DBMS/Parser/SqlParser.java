@@ -26,7 +26,7 @@ public class SqlParser {
     }
 
     private boolean isValues(String query) {
-        return query.toUpperCase().equals(keywords[17]);
+        return query.toUpperCase().equals("VALUES");
     }
 
 
