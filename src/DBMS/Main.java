@@ -12,7 +12,8 @@ public class Main {
         System.out.println("DBMS started");
         while (true) {
             Connection connection = new Connection();
-
+            queriesLoop(connection);
+            connection.close();
         }
     }
 
@@ -20,6 +21,10 @@ public class Main {
         while(true) {
             String query = connection.waitQuery();
             SqlParser parser = new SqlParser();
+            if(query == null) {
+                return;
+            }
+            System.out.println(query);
             parser.parse(query);
         }
     }

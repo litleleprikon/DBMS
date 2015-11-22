@@ -7,6 +7,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * Created by litleleprikon on 20/11/15.
@@ -31,7 +32,7 @@ public class Connection extends Thread {
     }
 
     public void handleError(String message) {
-        System.out.println(message);
+        System.err.println(message);
         JSONObject response = new JSONObject();
         response.put("status", STATUS_FAIL);
         response.put("error", message);
@@ -44,14 +45,17 @@ public class Connection extends Thread {
     }
 
     public String waitQuery() {
-        String message = "";
+        String message;
         JSONObject parsedMessage;
         while (true) {
             try {
-                socket.waitMessage();
+                message = socket.waitMessage();
             } catch (IOException e) {
                 System.out.println("IOException");
                 continue;
+            }
+            if(message == null) {
+                break;
             }
             try {
                 parsedMessage = (JSONObject) parser.parse(message);
@@ -68,11 +72,11 @@ public class Connection extends Thread {
                     fetch(parsedMessage);
                     break;
                 case TYPE_QUERY:
-                    lastCursor = (int)parsedMessage.get("id");
-                    return (String)parsedMessage.get("query");
+                    lastCursor = Integer.parseInt(parsedMessage.get("id").toString());
+                    return parsedMessage.get("query").toString();
             }
-
         }
+        return null;
     }
 
     public void setDataToCursor(Table data) {
@@ -86,7 +90,17 @@ public class Connection extends Thread {
     }
 
     public void createCursor(JSONObject obj) {
-        cursors.put(lastId, new Cursor(lastId++, this));
+        Cursor cursor = new Cursor(lastId, this);
+        cursors.put(lastId, cursor);
+        cursorCreatedResponse(lastId);
+        System.out.println("Created cursor. ID: " + lastId);
+        lastId++;
+    }
+
+    private void cursorCreatedResponse(int id) {
+        JSONObject response = new JSONObject();
+        response.put("cur_id", id);
+        successResponse(response);
     }
 
     private void fetch(int id, int num) {
@@ -107,5 +121,8 @@ public class Connection extends Thread {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+    }
+    public void close() {
+        socket.close();
     }
 }
