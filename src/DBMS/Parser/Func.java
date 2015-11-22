@@ -3,7 +3,7 @@ package DBMS.Parser;
 import java.util.ArrayList;
 
 public class Func {
-    private ArrayList<String> arguments;
+    private ArrayList<String> arguments = new ArrayList<>();
     private String name;
 
     public Func() {
