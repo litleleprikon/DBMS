@@ -32,6 +32,10 @@ public class Table implements Iterator<Tuple>{
         arguments.put(argument.getName(), argument);
     }
 
+    public void addTuple(Tuple tuple) {
+        tuples.add(tuple);
+    }
+
     public String getName() {
         return name;
     }

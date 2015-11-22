@@ -1,5 +1,6 @@
 package DBMS.DB.InnerStructure;
 
+import DBMS.DB.Constants;
 import DBMS.DB.InnerStructure.Types.Type;
 
 /**
@@ -30,9 +31,8 @@ public class Argument {
         this.type = type;
     }
 
-    public int compareTo(Argument to) {
-        String compareWith = this.getType().toString();
-        String compareTo  = to.getType().toString();
-        return compareWith.compareTo(compareTo);
+    @Override
+    public String toString() {
+        return name + (char)Constants.ARGUMENT_TYPE_SEPARATOR + type.getType();
     }
 }
