@@ -1,77 +1,79 @@
 package DBMS.Parser;
 
+import DBMS.DB.InnerStructure.Argument;
+import DBMS.DB.InnerStructure.Operator;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Optional;
 
 public class SqlParser {
 
     private final String[] keywords = {
-            "SELECT", "FROM",
-            "WHERE", "GROUP", "BY",
-            "ORDER",
-            "LIMIT", "OFFSET",
-            "LEFT", "JOIN", "ANY",
-            "CREATE", "TABLE", "ALTER",
-            "INSERT", "UPDATE", "DELETE", "AS", "VALUES", "INTO", "ON"
+            "SELECT", "FROM", "WHERE", "GROUP", "BY",
+            "ORDER", "LIMIT", "OFFSET", "LEFT", "JOIN",
+            "ANY", "CREATE", "TABLE", "ALTER", "INSERT",
+            "UPDATE", "DELETE", "AS", "VALUES", "INTO",
+            "ON"
     };
 
     private final String[] equation = {
             "=", "<", ">", "<=", ">="
     };
 
-    /**
-     * Query parsing into Operator + Parameters
-     * ToDo: values and insert parsing
-     * @param query - parsed query
-     */
-    public void parse(String query) {
+    private boolean condition(Argument a, Argument b, int condition) {
+        int result = a.compareTo(b);
+        switch (condition) {
+            case 0:
+                return result == 0;
+            case 1:
+                return result < 0;
+            case 2:
+                return result > 0;
+            case 3:
+                return (result < 0 || result == 0);
+            case 4:
+                return (result > 0 || result == 0);
+            default:
+                return true;
+        }
+    }
+
+    private boolean isCommand(String query) {
+        return Arrays.asList(keywords).contains(query.toUpperCase());
+    }
+
+    private boolean isAs(String query) {
+        return query.toUpperCase().equals(keywords[17]);
+    }
+
+
+    public ArrayList<Operator> parse(String query,boolean...inner) {
+        ArrayList<Operator> parsed = new ArrayList<>();
+        int priority = 0;
         String[] splittedQuery = query.split(" ");
-        LinkedList<String> arguments = new LinkedList<>();
-        String operator = "";
+        Operator operator = new Operator();
 
-        for (int i = 0; i < splittedQuery.length + 1; i++) {
+        for (int i = 0; i < splittedQuery.length+1; i++) {
             try {
-                if (splittedQuery[i].startsWith("(") || splittedQuery[i].equals("(")) { //parsing inner query
-                    splittedQuery[i] = splittedQuery[i].substring(1);
-                    String innerQuery = "";
-
-                    while (!splittedQuery[i].endsWith(")") && !splittedQuery[i].equals(")")) {
-                        innerQuery += splittedQuery[i] + " ";
+                if (isCommand(splittedQuery[i])) {
+                    parsed.add(operator);
+                    operator = new Operator(splittedQuery[i]);
+                    if (isCommand(splittedQuery[i+1])) {
+                        operator.setType(operator.getType()+splittedQuery[i+1]);
                         i++;
                     }
-
-                    splittedQuery[i] = splittedQuery[i].substring(0, splittedQuery[i].length() - 1);
-                    innerQuery += splittedQuery[i];
-                    parse(innerQuery);
-
-                } else { //parsing usual query
-                    if ((Arrays.asList(keywords).contains(splittedQuery[i].toUpperCase()))) {//parsing command
-                        if ((Arrays.asList(keywords).contains(splittedQuery[i + 1].toUpperCase()))) { //parsing two-word command with arguments
-                            parseOperator(operator, arguments);
-                            arguments.clear();
-
-                            operator = splittedQuery[i].toUpperCase() + " " + splittedQuery[i + 1].toUpperCase();
-                            i++;
-                        } else { //parsing comand with arguments
-                            parseOperator(operator, arguments);
-                            arguments.clear();
-
-                            operator = splittedQuery[i].toUpperCase();
-                        }
-                    } else if ((i < splittedQuery.length - 1)
-                            &&
-                            (Arrays.asList(equation).contains(splittedQuery[i + 1]))) { //parsing equation operator
-                        parseArguments(arguments, splittedQuery[i] + " " + splittedQuery[i + 1] + " " + splittedQuery[i + 2]);
-
-                        i += 2;
-                    } else {
-                        parseArguments(arguments, splittedQuery[i]);
-                    }
+                    
                 }
-            } catch (IndexOutOfBoundsException e) {
-                parseOperator(operator, arguments);
+            }
+            catch (ArrayIndexOutOfBoundsException e) {
+                // TODO: 22/11/15 Handle exception
             }
         }
+
+
+        return parsed;
     }
 
 
@@ -86,5 +88,21 @@ public class SqlParser {
         s = s.replaceAll("([,]|[']|[\"])", " ");
         s = s.trim();
         arguments.addLast(s);
+    }
+
+    public void parseValuesQuery(String values) {
+        String[] query;
+        query = values.split(" ", 2);
+        System.out.println(query[0]);
+        parseValues(query[1]);
+    }
+
+    public void parseValues(String valueString) {
+        String[] values;
+        valueString = valueString.replaceAll("[)][,] ", ")\0");
+        values = valueString.split("\0");
+        for (String value : values) {
+            System.out.println(value);
+        }
     }
 }

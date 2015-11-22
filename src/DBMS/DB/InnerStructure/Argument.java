@@ -29,4 +29,10 @@ public class Argument {
     public void setType(Type type) {
         this.type = type;
     }
+
+    public int compareTo(Argument to) {
+        String compareWith = this.getType().toString();
+        String compareTo  = to.getType().toString();
+        return compareWith.compareTo(compareTo);
+    }
 }

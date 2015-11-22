@@ -58,8 +58,8 @@ public class Metadata {
 
     private Type chooseType(String type) {
         if ("int".equals(type)) return new Int();
-        else if ("varchar".equals(type)) return new FixedVarChar();
-        else if (type.contains("(")) return new VarChar(Integer.valueOf(type.substring(type.indexOf('(') + 1, type.indexOf(')'))));
+//        else if ("varchar".equals(type)) return new FixedVarChar();
+//        else if (type.contains("(")) return new VarChar(Integer.valueOf(type.substring(type.indexOf('(') + 1, type.indexOf(')'))));
 
         return null;
     }
