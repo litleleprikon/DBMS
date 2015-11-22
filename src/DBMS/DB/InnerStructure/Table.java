@@ -13,7 +13,7 @@ import java.util.*;
 public class Table implements Iterator<Tuple>{
     private String name;
     private Map<String, Argument> arguments;
-    private LinkedList<Tuple> tuples;
+    private ArrayList<Tuple> tuples;
     private PrimaryKey primaryKey;
     private LinkedList<ForeignKey> foreignKeys;
     private Map<String, Index> indexes;
@@ -22,7 +22,7 @@ public class Table implements Iterator<Tuple>{
     public Table(String name) {
         this.name = name;
         arguments = new LinkedHashMap<>();
-        tuples = new LinkedList<>();
+        tuples = new ArrayList<>();
         foreignKeys = new LinkedList<>();
         indexes = new HashMap<>();
         counter = 0;
@@ -40,7 +40,7 @@ public class Table implements Iterator<Tuple>{
         return arguments;
     }
 
-    public LinkedList<Tuple> getTuples() {
+    public ArrayList<Tuple> getTuples() {
         return tuples;
     }
 
