@@ -1,11 +1,5 @@
 package DBMS.DB;
 
-import DBMS.DB.InnerStructure.Argument;
-import DBMS.DB.InnerStructure.Types.FixedVarChar;
-import DBMS.DB.InnerStructure.Types.Int;
-import DBMS.DB.InnerStructure.Types.Type;
-import DBMS.DB.InnerStructure.Types.VarChar;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -20,6 +14,11 @@ public class FileIO {
     public FileIO(Database database) {
         this.database = database;
         this.db = new File(database.getName()).getAbsoluteFile();
+        if (!db.exists()) try {
+            db.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -105,6 +104,47 @@ public class FileIO {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void writePage(int num, byte[] page) throws IOException {
+        RandomAccessFile raf = new RandomAccessFile(db, "rw");
+
+        if (database.getHeader() == null) readHeader();
+
+        long pos = num * database.getHeader().getPageSize() + 30; //first 30 bytes reserved for header
+        raf.seek(pos);
+        raf.write(page);
+    }
+
+    public void writeHeader() {
+        RandomAccessFile raf = null;
+
+        try {
+            raf = new RandomAccessFile(db, "rw");
+            byte[] buffer = new byte[10];
+            byte[] in = String.valueOf(database.getHeader().getPageSize()).getBytes();
+            System.arraycopy(in, 0, buffer, 0, in.length);
+            raf.write(buffer);
+
+            buffer = new byte[10];
+            in = String.valueOf(database.getHeader().getPageCount()).getBytes();
+            System.arraycopy(in, 0, buffer, 0, in.length);
+            raf.write(buffer);
+
+            buffer = new byte[10];
+            in = String.valueOf(database.getHeader().getMetaPage()).getBytes();
+            System.arraycopy(in, 0, buffer, 0, in.length);
+            raf.write(buffer);
+
+        } catch (IOException e) {
+            //TODO exception handle
+        } finally {
+            if (raf != null) try {
+                raf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

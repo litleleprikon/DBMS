@@ -1,6 +1,5 @@
 package DBMS.DB;
 
-import DBMS.DB.InnerStructure.Types.FixedVarChar;
 import DBMS.DB.InnerStructure.Types.Int;
 import DBMS.DB.InnerStructure.Types.Type;
 import DBMS.DB.InnerStructure.Types.VarChar;
@@ -15,7 +14,6 @@ public class Metadata {
     FileIO inOut;
     Map<String, TreeSet<Integer>> tabIndPages;
     List<Integer> metaPages;
-    private boolean wasChanged = false;
 
     public Metadata(FileIO inOut) {
         this.inOut = inOut;
