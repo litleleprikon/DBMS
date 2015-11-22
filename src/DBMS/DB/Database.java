@@ -2,6 +2,7 @@ package DBMS.DB;
 
 import DBMS.DB.InnerStructure.Argument;
 import DBMS.DB.InnerStructure.Table;
+import DBMS.DB.InnerStructure.Types.VarChar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,23 +29,30 @@ public class Database {
 
     public static Database create(String name, int pageSize) {
         Database database = new Database(name, pageSize);
-        database.header = new Header(pageSize, 0, -1);
+        database.header = new Header(pageSize, 1, 0);
         database.metadata = new Metadata(database.inOut);
+        database.metadata.addMetaPage(0);
 
         Table tabArg = new Table(catalog[0]);
-        tabArg.addArgument(new Argument("Table", new FixedVarChar()));
-        tabArg.addArgument(new Argument("Argument", new FixedVarChar()));
+        tabArg.addArgument(new Argument("Table", new VarChar()));
+        tabArg.addArgument(new Argument("Argument", new VarChar()));
         database.catalogTables.put(tabArg.getName(), tabArg);
+        database.metadata.addPage(catalog[0], database.getHeader().getPageCount());
+        database.header.incrementPageCount();
 
         Table tabKey = new Table(catalog[1]);
-        tabKey.addArgument(new Argument("Table", new FixedVarChar()));
-        tabKey.addArgument(new Argument("Key", new FixedVarChar()));
+        tabKey.addArgument(new Argument("Table", new VarChar()));
+        tabKey.addArgument(new Argument("Key", new VarChar()));
         database.catalogTables.put(tabKey.getName(), tabKey);
+        database.metadata.addPage(catalog[1], database.getHeader().getPageCount());
+        database.header.incrementPageCount();
 
         Table tabInd = new Table(catalog[2]);
-        tabInd.addArgument(new Argument("Table", new FixedVarChar()));
-        tabInd.addArgument(new Argument("Index", new FixedVarChar()));
+        tabInd.addArgument(new Argument("Table", new VarChar()));
+        tabInd.addArgument(new Argument("Index", new VarChar()));
         database.catalogTables.put(tabInd.getName(), tabInd);
+        database.metadata.addPage(catalog[2], database.getHeader().getPageCount());
+        database.header.incrementPageCount();
 
         return database;
     }
@@ -57,6 +65,8 @@ public class Database {
     public void createTable(String name) {
         if (tables.containsKey(name)) return; //TODO exception
         tables.put(name, new Table(name));
+        metadata.addPage(name, header.getPageCount());
+        header.incrementPageCount();
     }
 
     public String getName() {

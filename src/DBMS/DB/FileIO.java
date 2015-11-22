@@ -10,6 +10,7 @@ import java.io.RandomAccessFile;
 public class FileIO {
     private Database database;
     private File db;
+    public final static int pointerSize = 10;
 
     public FileIO(Database database) {
         this.database = database;
@@ -50,6 +51,12 @@ public class FileIO {
         else return in.indexOf(0) == -1 ? Integer.valueOf(in) : Integer.valueOf(in.substring(0, in.indexOf(0x00)));
     }
 
+    public static int getNextPage(byte[] page) {
+        byte[] nextPage = new byte[pointerSize];
+        System.arraycopy(page, page.length - pointerSize, nextPage, 0, nextPage.length);
+
+        return parseInt(nextPage);
+    }
 
     /**
      * Reads header(first 30 bytes) of Database file @code db
@@ -99,7 +106,7 @@ public class FileIO {
 
             Metadata metadata = new Metadata(this);
             metadata.addMetaPage(database.getHeader().getMetaPage());
-            metadata.parseMeta(page, 0, null);
+            metadata.parseMeta(page, 0);
             database.setMetadata(metadata);
 
         } catch (IOException e) {
