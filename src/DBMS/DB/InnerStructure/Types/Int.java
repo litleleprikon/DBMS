@@ -13,11 +13,21 @@ public class Int extends Type<Integer> {
 
     @Override
     public String toString() {
-        return "int";
+        return String.valueOf(data);
     }
 
     @Override
     public void parse(String sData) {
+        data = Integer.parseInt(sData);
+    }
 
+    @Override
+    public String getType() {
+        return "int";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 }

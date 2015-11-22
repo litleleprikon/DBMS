@@ -1,6 +1,5 @@
 package DBMS.DB.InnerStructure;
 
-import DBMS.DB.InnerStructure.Keys.PrimaryKey;
 import DBMS.DB.InnerStructure.Types.Type;
 
 import java.util.LinkedHashMap;
@@ -38,17 +37,20 @@ public class Tuple {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Tuple tuple = (Tuple) o;
+        Tuple otherTuple = (Tuple) o;
 
-        if (!table.equals(tuple.getTable())) return false;
+        if (!table.equals(otherTuple.table)) return false;
 
-        if (table.getPrimaryKey() == null) return !(values != null ? !values.equals(tuple.values) : tuple.values != null);
-        else {
-            PrimaryKey key = table.getPrimaryKey();
-            for (Argument argument : key.getKeyArguments()) {
-                if ()
-            }
+        if (values.size() != otherTuple.values.size()) return false;
+
+        for (Argument argument : values.keySet()) {
+            Type otherValue = otherTuple.getValue(argument);
+            Type value = values.get(argument);
+
+            if (!value.equals(otherValue)) return false;
         }
+
+        return true;
     }
 
     @Override

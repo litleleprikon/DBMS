@@ -1,5 +1,9 @@
 package DBMS.DB.InnerStructure;
 
+import DBMS.DB.InnerStructure.Indexes.Index;
+import DBMS.DB.InnerStructure.Keys.ForeignKey;
+import DBMS.DB.InnerStructure.Keys.PrimaryKey;
+
 import java.util.*;
 
 /**
@@ -10,9 +14,9 @@ public class Table implements Iterator<Tuple>{
     private String name;
     private Map<String, Argument> arguments;
     private LinkedList<Tuple> tuples;
-    private LinkedList<Argument> primaryKeys;
-    private LinkedList<Argument> foreignKeys;
-    private LinkedList<Index> indexes;
+    private PrimaryKey primaryKey;
+    private LinkedList<ForeignKey> foreignKeys;
+    private Map<String, Index> indexes;
     private int counter;
 
     public Table(String name) {
@@ -20,7 +24,7 @@ public class Table implements Iterator<Tuple>{
         arguments = new LinkedHashMap<>();
         tuples = new LinkedList<>();
         foreignKeys = new LinkedList<>();
-        primaryKeys = new LinkedList<>();
+        indexes = new HashMap<>();
         counter = 0;
     }
 
