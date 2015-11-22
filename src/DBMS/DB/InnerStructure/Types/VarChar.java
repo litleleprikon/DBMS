@@ -1,29 +1,20 @@
 package DBMS.DB.InnerStructure.Types;
 
-public class VarChar extends Type{
-    private char[] data;
-
-    public char[] getData() {
-        return data;
+public class VarChar extends Type<String>{
+    public VarChar() {
     }
 
-    public void setData(String data) {
-        this.data = data.toCharArray();
-        if (data.length() > size) {
-            int dif = data.length() - size;
-            this.data = data.substring(0, data.length() - dif).toCharArray();
-        }
-        if (data.length()<size) {
-            this.data = new char[size];
-            System.arraycopy(data.toCharArray(),0,this.data,0,data.length());
-        }
+    public VarChar(String data) {
+        this.data = data;
     }
 
     public String toString() {
-        return String.copyValueOf(data);
+        return "varchar";
     }
 
-    public VarChar(int size) {
-        this.size = size;
+
+    @Override
+    public void parse(String sData) {
+
     }
 }
