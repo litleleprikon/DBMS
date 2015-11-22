@@ -9,9 +9,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Objects;
 
-/**
- * Created by litleleprikon on 20/11/15.
- */
 public class Connection extends Thread {
     private MySocket socket;
     private HashMap<Integer, Cursor> cursors;
