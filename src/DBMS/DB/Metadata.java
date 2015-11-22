@@ -35,7 +35,13 @@ public class Metadata {
      * @param i - position on page
      */
     protected void parseMeta(byte[] page, int i) {
-        if (page[i] == Constants.END_OF_BLOCK || page[i] == 0) return;
+        if (page[i] == Constants.END_OF_BLOCK || page[i] == 0) {
+            int nextPage = FileIO.getNextPage(page);
+
+            if (nextPage != -1)
+                addMetaPage(nextPage);
+            return;
+        }
 
         //Parse table/index name
         String curStr = getWord(page, i, Constants.ARGUMENTS_SEGMENT_START);

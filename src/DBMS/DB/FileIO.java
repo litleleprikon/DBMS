@@ -157,7 +157,6 @@ public class FileIO {
     }
 
     public void writeMetadata() {
-        writeHeader();
         Metadata metadata = database.getMetadata();
 
         ArrayList<byte[]> pages = metadata.toWritingForm();
@@ -170,9 +169,13 @@ public class FileIO {
                 e.printStackTrace(); //TODO exception handle
             }
         }
+
+        writeHeader();
     }
 
     public Database getDatabase() {
         return database;
     }
+
+
 }
