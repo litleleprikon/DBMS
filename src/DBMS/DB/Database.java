@@ -447,7 +447,7 @@ public class Database {
         scan(sTable, page, i, isCatalog);
     }
 
-    private Table select(String query) {
+    public Table select(String query) {
         Table result = null;
 
         if (query.length() < 300) {
@@ -589,7 +589,7 @@ public class Database {
     }
 
     private Table selectList(int limit, int offset) {
-
+        return null;
     }
 
     public String getName() {
