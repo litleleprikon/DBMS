@@ -69,6 +69,10 @@ public class Table implements Iterator<Tuple>{
         return tuples;
     }
 
+    public void clear() {
+        tuples = new ArrayList<>();
+    }
+
     @Override
     public boolean hasNext() {
         return counter < tuples.size()-1;
