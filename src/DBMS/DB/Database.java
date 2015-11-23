@@ -168,6 +168,76 @@ public class Database {
 
             insert(tabArg.getName(), new Type[]{new VarChar(name), new VarChar(argument.getName() + (char) Constants.ARGUMENT_TYPE_SEPARATOR + argument.getType().getType())});
         }
+
+        if (primaryKey != null) createIndex(name, primaryKey.getArgument().getName());
+    }
+
+    public void createIndex(String sTable, String sArgument) {
+        Table table = tables.get(sTable);
+        Argument argument = table.getArgument(sArgument);
+
+        BPTreeIndex index = null;
+
+        if (argument.getType().getType().equals(Type.varchar)) index = new BPTreeIndex<String, Integer>(sArgument, argument);
+        else index = new BPTreeIndex<Integer, Integer>(sArgument, argument);
+
+        table.addIndex(index);
+
+        int tabPage = metadata.getPage(sTable);
+        byte[] page = null;
+        try {
+            page  = inOut.readPage(tabPage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        fillIndex(index, table, page, 0, tabPage);
+    }
+
+    public void fillIndex(BPTreeIndex index, Table table, byte[] page, int i, int pageNum) {
+        if (page[i] == 0) {
+            int num = FileIO.getNextPage(page);
+            if (num == -1) return; //TODO exception
+            else {
+                try {
+                    page = inOut.readPage(num);
+                    i = 0;
+                    fillIndex(index, table, page, i, num);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        Tuple tuple = new Tuple(table);
+        for (String s : table.getArguments().keySet()) {
+            String value = FileIO.getWord(page, i, Constants.ARGUMENTS_SEPARATOR);
+            i += value.length();
+
+            Type val = table.getArgument(s).getType().getType().equals(Type.varchar) ? new VarChar() : new Int();
+            val.parse(value);
+            tuple.addValue(table.getArgument(s), val);
+
+            i++;
+        }
+        i++;
+
+        index.put(tuple.getValue(index.getArguments().getName()).getData(), pageNum);
+
+        //check page
+        if (page[i] == 0 || i == page.length - FileIO.pointerSize) { //move to the next page
+            int num = FileIO.getNextPage(page);
+            if (num != -1) {
+                try {
+                    page = inOut.readPage(num);
+                    i = 0;
+                    pageNum = num;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        fillIndex(index, table, page, i, pageNum);
     }
 
     public void insert(String sTable, Type[] values) {
@@ -209,6 +279,14 @@ public class Database {
                 System.arraycopy(byteTuple, 0, page, nullIndex, byteTuple.length);
                 inOut.writePage(pageNum, page);
 
+                if (!catalogTables.containsKey(sTable)) {
+                    for (String sIndex : table.getIndexes().keySet()) {
+                        BPTreeIndex index = table.getIndex(sIndex);
+                        Argument argument = index.getArguments();
+                        index.put(tuple.getValue(argument.getName()), pageNum);
+                    }
+                }
+
             } else {//allocate new page
                 next = header.getPageCount();
                 header.incrementPageCount();
@@ -221,6 +299,14 @@ public class Database {
                 System.arraycopy(byteTuple, 0, page, 0, byteTuple.length);
 
                 inOut.writePage(next, page);
+
+                if (!catalogTables.containsKey(sTable)) {
+                    for (String sIndex : table.getIndexes().keySet()) {
+                        BPTreeIndex index = table.getIndex(sIndex);
+                        Argument argument = index.getArguments();
+                        index.put(tuple.getValue(argument.getName()), next);
+                    }
+                }
             }
 
             inOut.writeMetadata();
