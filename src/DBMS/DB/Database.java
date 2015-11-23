@@ -10,6 +10,7 @@ import DBMS.DB.InnerStructure.Tuple;
 import DBMS.DB.InnerStructure.Types.Int;
 import DBMS.DB.InnerStructure.Types.Type;
 import DBMS.DB.InnerStructure.Types.VarChar;
+import DBMS.Parser.Operator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -446,6 +447,150 @@ public class Database {
         scan(sTable, page, i, isCatalog);
     }
 
+    private Table select(String query) {
+        Table result = null;
+
+        if (query.length() < 300) {
+            int i = query.indexOf("LIMIT");
+            i += "LIMIT".length();
+            i++;
+
+            char c;
+            String limit = "";
+            while (Character.isDigit(c = query.charAt(i++))) {
+                limit += c;
+            }
+
+
+            i = query.indexOf("OFFSET");
+            i += "OFFSET".length();
+            i++;
+
+            String offset = "";
+            while (Character.isDigit(c = query.charAt(i++))) {
+                offset += c;
+            }
+            
+            selectList(Integer.valueOf(limit), Integer.valueOf(offset));
+        } else {
+            String pid = "p.id = ";
+            int i = query.lastIndexOf(pid);
+            i += pid.length();
+            
+            char c;
+            String id = "";
+            while (Character.isDigit(c = query.charAt(i++))) {
+                id += c;
+            }
+            
+            selectOne(Integer.valueOf(id));
+        }
+
+        return result;
+    }
+
+    private Table selectOne(int id) {
+        Table result = new Table("result");
+        scan("publication");
+        scan("publisher");
+        scan("publication_type");
+        
+        Table temp1 = new Table("temp");
+        temp1.addArgument(new Argument("id", new Int()));
+        temp1.addArgument(new Argument("title", new VarChar()));
+        temp1.addArgument(new Argument("year", new Int()));
+        temp1.addArgument(new Argument("publisher", new Int()));
+        temp1.addArgument(new Argument("pdf", new VarChar()));
+        temp1.addArgument(new Argument("type", new Int()));
+        temp1.addArgument(new Argument("abstract", new VarChar()));
+        temp1.addArgument(new Argument("ar_number", new Int()));
+        temp1.addArgument(new Argument("doi", new VarChar()));
+        temp1.addArgument(new Argument("end_page", new Int()));
+        temp1.addArgument(new Argument("md_url", new VarChar()));
+        temp1.addArgument(new Argument("part_num", new Int()));
+        temp1.addArgument(new Argument("start_page", new Int()));
+        for (Tuple tuple : tables.get("publication").getTuples()) {
+            if ((Integer)(tuple.getValue("id").getData()) == id) {
+                Tuple tup = new Tuple(temp1);
+                for (String str : temp1.getArguments().keySet()) {
+                    tup.addValue(temp1.getArgument(str), tuple.getValue(str));
+                }
+                temp1.addTuple(tup);
+            }
+        }
+        
+        
+        Table temp2 = new Table("temp");
+        temp2.addArgument(new Argument("id", new Int()));
+        temp2.addArgument(new Argument("title", new VarChar()));
+        temp2.addArgument(new Argument("year", new Int()));
+        temp2.addArgument(new Argument("publisher", new VarChar()));
+        temp2.addArgument(new Argument("pdf", new VarChar()));
+        temp2.addArgument(new Argument("type", new Int()));
+        temp2.addArgument(new Argument("abstract", new VarChar()));
+        temp2.addArgument(new Argument("ar_number", new Int()));
+        temp2.addArgument(new Argument("doi", new VarChar()));
+        temp2.addArgument(new Argument("end_page", new Int()));
+        temp2.addArgument(new Argument("md_url", new VarChar()));
+        temp2.addArgument(new Argument("part_num", new Int()));
+        temp2.addArgument(new Argument("start_page", new Int()));
+        
+        for (Tuple tuple1 : temp1.getTuples()) {
+            for (Tuple tuple2 : tables.get("publisher").getTuples()) {
+                
+                if (((Integer)tuple1.getValue("publisher").getData()).equals((Integer)(tuple2.getValue("id").getData()))) {
+                    Tuple tuple = new Tuple(temp2);
+                    for (String str : temp2.getArguments().keySet()) {
+                        if (str.equals("publisher")) {
+                            tuple.addValue(temp2.getArgument(str), tuple2.getValue("name"));
+                        } else {
+                            tuple.addValue(temp2.getArgument(str), tuple1.getValue(str));
+                        }
+                    }
+                    temp2.addTuple(tuple);
+                }
+                
+            }
+        }
+        
+        
+        result.addArgument(new Argument("id", new Int()));
+        result.addArgument(new Argument("title", new VarChar()));
+        result.addArgument(new Argument("year", new Int()));
+        result.addArgument(new Argument("publisher", new VarChar()));
+        result.addArgument(new Argument("pdf", new VarChar()));
+        result.addArgument(new Argument("type", new VarChar()));
+        result.addArgument(new Argument("abstract", new VarChar()));
+        result.addArgument(new Argument("ar_number", new Int()));
+        result.addArgument(new Argument("doi", new VarChar()));
+        result.addArgument(new Argument("end_page", new Int()));
+        result.addArgument(new Argument("md_url", new VarChar()));
+        result.addArgument(new Argument("part_num", new Int()));
+        result.addArgument(new Argument("start_page", new Int()));
+        
+        for (Tuple tuple1 : temp2.getTuples()) {
+            for (Tuple tuple2 : tables.get("publication_type").getTuples()) {
+                
+                if (tuple1.getValue("type").getData().equals(tuple2.getValue("id").getData())) {
+                    Tuple tuple = new Tuple(result);
+
+                    for (String str : result.getArguments().keySet()) {
+                        if (str.equals("type")) {
+                            tuple.addValue(result.getArgument(str), tuple.getValue("name"));
+                        } else {
+                            tuple.addValue(result.getArgument(str), tuple1.getValue(str));
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private Table selectList(int limit, int offset) {
+
+    }
 
     public String getName() {
         return name;
