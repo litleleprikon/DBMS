@@ -7,7 +7,7 @@ import gudusoft.gsqlparser.TCustomSqlStatement;
 /**
  * Created by litleleprikon on 23/11/15.
  */
-public class SelectQuery {
+public class SelectQuery implements SQLQuery{
     private Database db;
     private TCustomSqlStatement statement;
 

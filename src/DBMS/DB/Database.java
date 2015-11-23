@@ -11,6 +11,8 @@ import DBMS.DB.InnerStructure.Types.Int;
 import DBMS.DB.InnerStructure.Types.Type;
 import DBMS.DB.InnerStructure.Types.VarChar;
 import DBMS.Parser.Operator;
+import DBMS.Queries.SQLQuery;
+import DBMS.Queries.SelectQuery;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 
 import java.io.IOException;
@@ -448,9 +450,14 @@ public class Database {
         scan(sTable, page, i, isCatalog);
     }
 
-    public Table select(TCustomSqlStatement query) {
-
-        return null;
+    public Table executeQuery(TCustomSqlStatement statement) {
+        SQLQuery executor = null;
+        switch (statement.sqlstatementtype.toString()) {
+            case "sstselect":
+                executor = new SelectQuery(this, statement);
+                break;
+        }
+        return executor.execute();
     }
 
     private Table selectList(int limit, int offset) {
