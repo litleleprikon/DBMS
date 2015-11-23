@@ -1,6 +1,9 @@
 package DBMS.communication;
 
 import DBMS.DB.InnerStructure.Table;
+import gudusoft.gsqlparser.EDbVendor;
+import gudusoft.gsqlparser.TCustomSqlStatement;
+import gudusoft.gsqlparser.TGSqlParser;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -41,7 +44,7 @@ public class Connection extends Thread {
         socket.sendMessage(response.toJSONString());
     }
 
-    public String waitQuery() {
+    public TCustomSqlStatement waitQuery() {
         String message;
         JSONObject parsedMessage;
         while (true) {
@@ -70,10 +73,23 @@ public class Connection extends Thread {
                     break;
                 case TYPE_QUERY:
                     lastCursor = Integer.parseInt(parsedMessage.get("id").toString());
-                    return parsedMessage.get("query").toString();
+                    String query = parsedMessage.get("query").toString();
+                    System.out.println(query);
+                    return parse(query);
             }
         }
         return null;
+    }
+
+    private TCustomSqlStatement parse(String query) {
+        TGSqlParser sqlparser = new TGSqlParser(EDbVendor.dbvpostgresql);
+        sqlparser.sqltext = query;
+        int ret = sqlparser.parse();
+        if (ret != 0){
+            System.err.println(sqlparser.getErrormessage());
+            return null;
+        }
+        return sqlparser.sqlstatements.get(0);
     }
 
     public void setDataToCursor(Table data) {
