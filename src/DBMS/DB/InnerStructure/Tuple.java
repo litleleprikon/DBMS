@@ -1,7 +1,9 @@
 package DBMS.DB.InnerStructure;
 
+import DBMS.DB.Constants;
 import DBMS.DB.InnerStructure.Types.Type;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,6 +33,23 @@ public class Tuple {
 
     public Table getTable() {
         return table;
+    }
+
+    public byte[] toWritingForm() {
+        ArrayList<Byte> tup = new ArrayList<>();
+
+        for (String s : table.getArguments().keySet()) {
+            for (byte b : values.get(table.getArgument(s)).toString().getBytes()) tup.add(b);
+
+            tup.add(Constants.ARGUMENTS_SEPARATOR);
+        }
+        tup.add(Constants.END_OF_ARGUMENTS_SEGMENT);
+
+        byte[] byteTuple = new byte[tup.size()];
+        for (int i = 0; i < byteTuple.length; i++) {
+            byteTuple[i] = tup.get(i);
+        }
+        return byteTuple;
     }
 
     @Override

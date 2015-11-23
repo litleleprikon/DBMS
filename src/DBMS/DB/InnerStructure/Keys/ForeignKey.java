@@ -12,8 +12,8 @@ public class ForeignKey extends Key{
     protected Table foreignTable;
 
 
-    public ForeignKey(Table table, Argument argument, Table foreignTable) {
-        super(table, argument);
+    public ForeignKey(Argument argument, Table foreignTable) {
+        super(argument);
         this.foreignTable = foreignTable;
     }
 

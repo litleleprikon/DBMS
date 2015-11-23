@@ -111,10 +111,10 @@ public class Database {
             String argument = arguments[1];
 
            if ("none".equals(foreignTable)) {
-               PrimaryKey key = new PrimaryKey(table, table.getArgument(argument));
+               PrimaryKey key = new PrimaryKey(table.getArgument(argument));
                table.setPrimaryKey(key);
            }  else {
-               ForeignKey key = new ForeignKey(table, table.getArgument(argument), database.tables.get(foreignTable));
+               ForeignKey key = new ForeignKey(table.getArgument(argument), database.tables.get(foreignTable));
                table.addForeignKey(key);
            }
 
@@ -160,16 +160,76 @@ public class Database {
         metadata.addPage(name, header.getPageCount());
         header.incrementPageCount();
 
+        if (primaryKey != null) insert(catalog[1], new Type[]{new VarChar(name), new VarChar("none" + (char)Constants.ARGUMENT_TYPE_SEPARATOR + primaryKey.getArgument().getName())});
+
         Table tabArg = catalogTables.get(catalog[0]);
         for (Argument argument : arguments) {
             table.addArgument(argument);
 
-            Tuple tabArgTuple = new Tuple(tabArg);
-            tabArgTuple.addValue(tabArg.getArguments().get("Table"), new VarChar(name));
-            tabArgTuple.addValue(tabArg.getArguments().get("Argument"), new VarChar(argument.toString()));
+            insert(tabArg.getName(), new Type[]{new VarChar(name), new VarChar(argument.getName() + (char) Constants.ARGUMENT_TYPE_SEPARATOR + argument.getType().getType())});
         }
     }
 
+    public void insert(String sTable, Type[] values) {
+        Table table = tables.get(sTable);
+        for (String s : catalog) {
+            if (s.equals(sTable)) {
+                table = catalogTables.get(sTable);
+                break;
+            }
+        }
+
+        Tuple tuple = new Tuple(table);
+
+        int ind = 0;
+        for (String s : table.getArguments().keySet()) {
+            tuple.addValue(table.getArgument(s), values[ind++]);
+        }
+
+        table.addTuple(tuple);
+
+        //write new tuple
+        int pageNum = metadata.getPage(sTable);
+        try {
+            byte[] page = inOut.readPage(pageNum);
+            int next;
+            while ((next = FileIO.getNextPage(page)) != -1) {
+                pageNum = next;
+                page = inOut.readPage(next);
+            }
+
+            int nullIndex;
+            for (nullIndex = 0; nullIndex < page.length; nullIndex++) {
+                if (page[nullIndex] == 0) break;
+            }
+
+            byte[] byteTuple = tuple.toWritingForm();
+
+            if (byteTuple.length + nullIndex < page.length - FileIO.pointerSize) {//tuple fits to page
+                System.arraycopy(byteTuple, 0, page, nullIndex, byteTuple.length);
+                inOut.writePage(pageNum, page);
+
+            } else {//allocate new page
+                next = header.getPageCount();
+                header.incrementPageCount();
+                byte[] nextInBytes = String.valueOf(next).getBytes();
+                //write pointer to new page
+                System.arraycopy(nextInBytes, 0, page, page.length - FileIO.pointerSize, nextInBytes.length);
+
+                //write new page
+                page = new byte[header.getPageSize()];
+                System.arraycopy(byteTuple, 0, page, 0, byteTuple.length);
+
+                inOut.writePage(next, page);
+            }
+
+            inOut.writeMetadata();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     private void scanIndex(String index, String table) {
         if (!metadata.getPages().containsKey(index)) return;
