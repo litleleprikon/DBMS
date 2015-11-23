@@ -7,12 +7,15 @@ import java.util.LinkedList;
 
 public class Operator {
     private String type;
+
     private LinkedList<QueryArgument> arguments = new LinkedList<>();
     private ArrayList<Operator> innerQuery;
 
     private ArrayList<Value> values;
 
     private Func func;
+
+
 
     public Func getFunc() {
         return func;
