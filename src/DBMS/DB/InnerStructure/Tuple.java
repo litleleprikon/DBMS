@@ -24,8 +24,9 @@ public class Tuple {
         values.put(argument, value);
     }
 
-    public Type getValue(Argument argument) {
-        return values.get(argument);
+    public Type getValue(String argument) {
+        Argument arg = table.getArgument(argument);
+        return values.get(arg);
     }
 
     public Table getTable() {
@@ -44,7 +45,7 @@ public class Tuple {
         if (values.size() != otherTuple.values.size()) return false;
 
         for (Argument argument : values.keySet()) {
-            Type otherValue = otherTuple.getValue(argument);
+            Type otherValue = otherTuple.getValue(argument.getName());
             Type value = values.get(argument);
 
             if (!value.equals(otherValue)) return false;

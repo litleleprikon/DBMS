@@ -44,12 +44,12 @@ public class Metadata {
         }
 
         //Parse table/index name
-        String curStr = getWord(page, i, Constants.ARGUMENTS_SEGMENT_START);
+        String curStr = inOut.getWord(page, i, Constants.ARGUMENTS_SEGMENT_START);
         i += curStr.length();
 
         //parse page number
         i++;
-        String sNumber = getWord(page, i, Constants.END_OF_ARGUMENTS_SEGMENT);
+        String sNumber = inOut.getWord(page, i, Constants.END_OF_ARGUMENTS_SEGMENT);
         int number = Integer.valueOf(sNumber);
         i += sNumber.length();
 
@@ -73,18 +73,7 @@ public class Metadata {
         parseMeta(page, i);
     }
 
-    /**
-     * Parses next word from @code page starting from @code i until @code div
-     * @param page - page from which word is parsed
-     * @param i - current position on the page
-     * @param div - divider of words
-     * @return String representation of parsed word
-     */
-    private String getWord(byte[] page, int i, byte div) {
-        StringBuilder sb = new StringBuilder();
-        while (page[i] != div) sb.append((char) page[i++]);
-        return sb.toString();
-    }
+
 
     public void addMetaPage(int page) {
         metaPages.add(page);
@@ -92,6 +81,14 @@ public class Metadata {
 
     public ArrayList<Integer> getMetaPages() {
         return metaPages;
+    }
+
+    public Map<String, Integer> getPages() {
+        return pages;
+    }
+
+    public int getPage(String table) {
+        return pages.get(table);
     }
 
     /**

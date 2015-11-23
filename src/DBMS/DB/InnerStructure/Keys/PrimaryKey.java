@@ -9,7 +9,7 @@ import java.util.LinkedList;
  * Created by dmitriy on 20-Nov-15.
  */
 public class PrimaryKey extends Key{
-    public PrimaryKey(Table table, LinkedList<Argument> keyArguments) {
-        super(table, keyArguments);
+    public PrimaryKey(Table table, Argument argument) {
+        super(table, argument);
     }
 }

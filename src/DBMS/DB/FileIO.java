@@ -60,6 +60,19 @@ public class FileIO {
     }
 
     /**
+     * Parses next word from @code page starting from @code i until @code div
+     * @param page - page from which word is parsed
+     * @param i - current position on the page
+     * @param div - divider of words
+     * @return String representation of parsed word
+     */
+    public static String getWord(byte[] page, int i, byte div) {
+        StringBuilder sb = new StringBuilder();
+        while (page[i] != div) sb.append((char) page[i++]);
+        return sb.toString();
+    }
+
+    /**
      * Reads header(first 30 bytes) of Database file @code db
      */
     public void readHeader() {

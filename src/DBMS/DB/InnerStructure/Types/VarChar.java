@@ -21,7 +21,7 @@ public class VarChar extends Type<String>{
 
     @Override
     public String getType() {
-        return "varchar";
+        return Type.varchar;
     }
 
     @Override

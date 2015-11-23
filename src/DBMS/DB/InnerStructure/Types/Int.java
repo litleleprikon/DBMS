@@ -23,7 +23,7 @@ public class Int extends Type<Integer> {
 
     @Override
     public String getType() {
-        return "int";
+        return Type.integer;
     }
 
     @Override

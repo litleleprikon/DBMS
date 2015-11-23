@@ -33,7 +33,7 @@ public class BPTreeIndex<K extends Comparable<K>, V> extends Index
      * Creates a new BPTreeIndex.
      * @throws IllegalArgumentException thrown if order < 3 or leafOrder < 1.
      */
-    BPTreeIndex(String name, Argument argument)
+    public BPTreeIndex(String name, Argument argument)
     {
         super(name, argument);
         this.order = 3;

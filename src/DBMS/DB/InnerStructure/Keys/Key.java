@@ -10,18 +10,18 @@ import java.util.LinkedList;
  */
 public abstract class Key {
     protected Table table;
-    protected LinkedList<Argument> keyArguments;
+    protected Argument argument;
 
-    public Key(Table table, LinkedList<Argument> keyArguments) {
+    public Key(Table table, Argument argument) {
         this.table = table;
-        this.keyArguments = keyArguments;
+        this.argument = argument;
     }
 
     public Table getTable() {
         return table;
     }
 
-    public LinkedList<Argument> getKeyArguments() {
-        return keyArguments;
+    public Argument getArgument() {
+        return argument;
     }
 }

@@ -1,5 +1,6 @@
 package DBMS.DB.InnerStructure;
 
+import DBMS.DB.InnerStructure.Indexes.BPTreeIndex;
 import DBMS.DB.InnerStructure.Indexes.Index;
 import DBMS.DB.InnerStructure.Keys.ForeignKey;
 import DBMS.DB.InnerStructure.Keys.PrimaryKey;
@@ -16,7 +17,7 @@ public class Table implements Iterator<Tuple>{
     private ArrayList<Tuple> tuples;
     private PrimaryKey primaryKey;
     private LinkedList<ForeignKey> foreignKeys;
-    private Map<String, Index> indexes;
+    private Map<String, BPTreeIndex> indexes;
     private int counter;
 
     public Table(String name) {
@@ -42,6 +43,22 @@ public class Table implements Iterator<Tuple>{
 
     public Map<String, Argument> getArguments() {
         return arguments;
+    }
+
+    public Argument getArgument(String name) {
+        return arguments.get(name);
+    }
+
+    public void setPrimaryKey(PrimaryKey primaryKey) {
+        this.primaryKey = primaryKey;
+    }
+
+    public void addForeignKey(ForeignKey key) {foreignKeys.add(key);}
+
+    public void addIndex(BPTreeIndex index) {indexes.put(index.getName(), index);}
+
+    public BPTreeIndex getIndex(String index) {
+        return indexes.get(index);
     }
 
     public ArrayList<Tuple> getTuples() {

@@ -1,11 +1,20 @@
 package DBMS.DB;
 
 import DBMS.DB.InnerStructure.Argument;
+import DBMS.DB.InnerStructure.Indexes.BPTreeIndex;
+import DBMS.DB.InnerStructure.Keys.ForeignKey;
+import DBMS.DB.InnerStructure.Keys.Key;
+import DBMS.DB.InnerStructure.Keys.PrimaryKey;
 import DBMS.DB.InnerStructure.Table;
 import DBMS.DB.InnerStructure.Tuple;
+import DBMS.DB.InnerStructure.Types.Int;
+import DBMS.DB.InnerStructure.Types.Type;
 import DBMS.DB.InnerStructure.Types.VarChar;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -21,51 +30,127 @@ public class Database {
 
     public final static String[] catalog = {"TableArgument", "TableKey", "TableIndex"};
 
-    private Database(String name, int pageSize) {
+    private Database(String name) {
         this.name = name;
         inOut = new FileIO(this);
         catalogTables = new HashMap<>();
         tables = new HashMap<>();
-    }
-
-    public static Database create(String name, int pageSize) {
-        Database database = new Database(name, pageSize);
-        database.header = new Header(pageSize, 1, 0);
-        database.metadata = new Metadata(database.inOut);
-        database.metadata.addMetaPage(0);
 
         Table tabArg = new Table(catalog[0]);
         tabArg.addArgument(new Argument("Table", new VarChar()));
         tabArg.addArgument(new Argument("Argument", new VarChar()));
-        database.catalogTables.put(tabArg.getName(), tabArg);
-        database.metadata.addPage(catalog[0], database.getHeader().getPageCount());
-        database.header.incrementPageCount();
+        catalogTables.put(tabArg.getName(), tabArg);
 
         Table tabKey = new Table(catalog[1]);
         tabKey.addArgument(new Argument("Table", new VarChar()));
         tabKey.addArgument(new Argument("Key", new VarChar()));
-        database.catalogTables.put(tabKey.getName(), tabKey);
-        database.metadata.addPage(catalog[1], database.getHeader().getPageCount());
-        database.header.incrementPageCount();
+        catalogTables.put(tabKey.getName(), tabKey);
 
         Table tabInd = new Table(catalog[2]);
         tabInd.addArgument(new Argument("Table", new VarChar()));
         tabInd.addArgument(new Argument("Index", new VarChar()));
-        database.catalogTables.put(tabInd.getName(), tabInd);
+        catalogTables.put(tabInd.getName(), tabInd);
+    }
+
+    public static Database create(String name, int pageSize) {
+        Database database = new Database(name);
+        database.header = new Header(pageSize, 1, 0);
+        database.metadata = new Metadata(database.inOut);
+        database.metadata.addMetaPage(0);
+
+
+        database.metadata.addPage(catalog[0], database.getHeader().getPageCount());
+        database.header.incrementPageCount();
+
+        database.metadata.addPage(catalog[1], database.getHeader().getPageCount());
+        database.header.incrementPageCount();
+
         database.metadata.addPage(catalog[2], database.getHeader().getPageCount());
         database.header.incrementPageCount();
 
         return database;
     }
 
+
     public static Database create(String name) {
         int defaultSize = 4096;
         return create(name, defaultSize);
     }
 
-    public void createTable(String name, Argument[] arguments) {
+    public static Database load(String name) {
+        Database database = new Database(name);
+
+        database.getInOut().readMetadata();
+
+        //read tables structure from catalog tables
+        for (String s : catalog) database.scan(s);
+
+        //load tables arguments
+        Table catTab = database.catalogTables.get(catalog[0]);
+        for (Tuple tuple : catTab.getTuples()) {
+            String tabName = (String) tuple.getValue("Table").getData();
+            String arg = ((String) tuple.getValue("Argument").getData());
+            String[] arr = arg.split(String.valueOf((char) Constants.ARGUMENT_TYPE_SEPARATOR));
+
+            if (!database.tables.containsKey(tabName)) database.tables.put(tabName, new Table(tabName));
+
+            Table table = database.tables.get(tabName);
+            Argument argument = new Argument(arr[0], arr[1].equals(Type.varchar) ? new VarChar() : new Int());
+            table.addArgument(argument);
+        }
+
+        //load tables keys
+        catTab = database.catalogTables.get(catalog[1]);
+        for (Tuple tuple : catTab.getTuples()) {
+            String tabName = (String) tuple.getValue("Table").getData();
+            Table table = database.tables.get(tabName);
+
+            String[] arguments = ((String) tuple.getValue("Key").getData()).split(String.valueOf((char) Constants.ARGUMENT_TYPE_SEPARATOR));
+
+            String foreignTable = arguments[0];
+            String argument = arguments[1];
+
+           if ("none".equals(foreignTable)) {
+               PrimaryKey key = new PrimaryKey(table, table.getArgument(argument));
+               table.setPrimaryKey(key);
+           }  else {
+               ForeignKey key = new ForeignKey(table, table.getArgument(argument), database.tables.get(foreignTable));
+               table.addForeignKey(key);
+           }
+
+        }
+
+        //load tables indexes
+        catTab = database.catalogTables.get(catalog[2]);
+        for (Tuple tuple : catTab.getTuples()) {
+            String tabName = (String) tuple.getValue("Table").getData();
+            Table table = database.tables.get(tabName);
+
+            String[] arguments = ((String) tuple.getValue("Index").getData()).split(String.valueOf((char) Constants.ARGUMENT_TYPE_SEPARATOR));
+
+            String indName = arguments[0];
+            String indArg = arguments[1];
+            String argType = table.getArgument(indArg).getType().getType();
+
+            if (Type.integer.equals(argType)) {
+                BPTreeIndex<Integer, Integer> index = new BPTreeIndex<>(indName, table.getArgument(indArg));
+                table.addIndex(index);
+            } else {
+                BPTreeIndex<String, Integer> index = new BPTreeIndex<>(indName, table.getArgument(indArg));
+                table.addIndex(index);
+            }
+        }
+
+        //TODO load serialised indexes
+
+
+        return database;
+    }
+
+    public void createTable(String name, Argument[] arguments, PrimaryKey primaryKey) {
         if (tables.containsKey(name)) return; //TODO exception
         Table table = new Table(name);
+        table.setPrimaryKey(primaryKey);
         tables.put(name, table);
         metadata.addPage(name, header.getPageCount());
         header.incrementPageCount();
@@ -79,6 +164,66 @@ public class Database {
             tabArgTuple.addValue(tabArg.getArguments().get("Argument"), new VarChar(argument.toString()));
         }
     }
+
+
+    private void scan(String table) {
+        if (!metadata.getPages().containsKey(table)) return;
+
+        int startPage = metadata.getPage(table);
+        byte[] page = null;
+        try {
+            page = inOut.readPage(startPage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        boolean isCatalog = false;
+        for (String s : catalog) {
+            if (s.equals(table)) {
+                isCatalog = true;
+                break;
+            }
+        }
+
+        scan(table, page, 0, isCatalog);
+    }
+
+    private void scan(String sTable, byte[] page, int i, boolean isCatalog) {
+        if (page[i] == 0) return; //TODO exception
+
+        Table table = isCatalog ? catalogTables.get(sTable) : tables.get(sTable);
+        Tuple tuple = new Tuple(table);
+
+        for (String s : table.getArguments().keySet()) {
+            String value = FileIO.getWord(page, i, Constants.ARGUMENTS_SEPARATOR);
+            i += value.length();
+
+            Type val = table.getArgument(s).getType().getType().equals(Type.varchar) ? new VarChar() : new Int();
+            val.parse(value);
+            tuple.addValue(table.getArgument(s), val);
+
+            i++;
+        }
+        i++;
+
+        table.addTuple(tuple);
+
+        //check page
+        if (page[i] == 0 || i == page.length - FileIO.pointerSize) { //move to the next page
+            int num = FileIO.getNextPage(page);
+            if (num != -1) {
+                try {
+                    page = inOut.readPage(num);
+                    i = 0;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        scan(sTable, page, i, isCatalog);
+    }
+
 
     public String getName() {
         return name;
