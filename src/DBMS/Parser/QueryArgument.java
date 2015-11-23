@@ -5,6 +5,8 @@ public class QueryArgument {
     private String data;
     private String alias;
 
+
+
     private String condition;
 
     private QueryArgument compare;

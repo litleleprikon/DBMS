@@ -20,12 +20,12 @@ public class Main {
     private static void queriesLoop(Connection connection) {
         while(true) {
             String query = connection.waitQuery();
-            SqlParser parser = new SqlParser();
+//            SqlParser parser = new SqlParser();
             if(query == null) {
                 return;
             }
             System.out.println(query);
-            parser.parse(query);
+//            parser.parse(query);
         }
     }
 }

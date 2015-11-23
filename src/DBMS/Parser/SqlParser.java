@@ -1,8 +1,14 @@
 package DBMS.Parser;
 
+import DBMS.DB.Database;
+import DBMS.DB.InnerStructure.Argument;
+import DBMS.DB.InnerStructure.Keys.PrimaryKey;
+import DBMS.DB.InnerStructure.Table;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
 public class SqlParser {
 
@@ -29,11 +35,27 @@ public class SqlParser {
         return query.toUpperCase().equals("VALUES");
     }
 
+    private Database database;
+
+    public SqlParser(Database database) {
+        this.database=database;
+    }
 
     public ArrayList<Operator> parse(String query) {
 
         ArrayList<Operator> parsed = new ArrayList<>();
-        String[] splittedQuery = query.split(" ");
+        String[] splittedQuery = query.split("([ ])");
+
+        List<String> list = new ArrayList<String>();
+
+        for(String s : splittedQuery) {
+            if(s != null && s.length() > 0) {
+                list.add(s);
+            }
+        }
+
+        splittedQuery=list.toArray(new String[list.size()]);
+
         Operator operator = new Operator();
 
         for (int i = 0; i < splittedQuery.length + 1; i++) {
@@ -43,7 +65,7 @@ public class SqlParser {
                     operator = new Operator(splittedQuery[i]);
 
                     if (isValues(splittedQuery[i])) {
-                        operator.setValues(parseValuesQuery(splittedQuery, i));
+                        operator.setValues(parseValuesQuery(splittedQuery, i+1));
                         i++;
                         while (!isCommand(splittedQuery[i])) {
                             i++;
@@ -52,13 +74,20 @@ public class SqlParser {
 
                     if (isCommand(splittedQuery[i + 1])) {
                         operator.setType(operator.getType() + " " + splittedQuery[i + 1]);
+                        if (operator.getType().equals("CREATE TABLE")) {
+                            parseCreate(splittedQuery,i+2);
+                            i+=2;
+                            while (!isCommand(splittedQuery[i])) {
+                                i++;
+                            }
+                        }
                         i++;
                     }
 
                     if (splittedQuery[i + 1].startsWith("(") || splittedQuery[i + 1].equals("(")) {
                         operator.setInnerQuery(parseInnerQuery(splittedQuery, i + 1));
                     } else {
-                        operator.setQueryArguments(parseQueryArguments(splittedQuery, i));
+                        operator.setQueryArguments(parseQueryArguments(splittedQuery, i+1));
                         i++;
                         while (!isCommand(splittedQuery[i])) {
                             i++;
@@ -77,10 +106,8 @@ public class SqlParser {
         return parsed;
     }
 
-
     public LinkedList<QueryArgument> parseQueryArguments(String[] splittedQuery, int i) {
         LinkedList<QueryArgument> queryArguments = new LinkedList<>();
-        i += 1;
         QueryArgument queryArgument;
 
         while (i < splittedQuery.length && !isCommand(splittedQuery[i])) {
@@ -135,7 +162,6 @@ public class SqlParser {
 
     public ArrayList<Value> parseValuesQuery(String[] query, int i) {
         ArrayList<Value> values = new ArrayList<>();
-        i++;
 
         String valueString = "";
 
@@ -181,5 +207,37 @@ public class SqlParser {
 
         return func;
     }
+
+    public void parseCreate(String[] query, int i) {
+        String name = query[i];
+        LinkedList<Argument> arguments = new LinkedList<>();
+
+        ArrayList<String> temp = new ArrayList<>();
+
+        i++;
+
+        name=name.replaceAll("([\n]|[']|[\"]|[,]|[)]|[(])"," ").trim();
+
+        while (i<query.length&&!isCommand(query[i])) {
+//            if (!query[i].equals("")) temp.add(query[i]);
+//            if (query[i].contains(",")) {
+//                parseCreateArg(temp);
+//                temp = new ArrayList<>();
+//            }
+            System.out.println(query[i]);
+            i++;
+        }
+
+        Argument[] args = new Argument[arguments.size()];
+        arguments.toArray(args);
+
+        PrimaryKey pkey = new PrimaryKey(args[0]);
+
+        database.createTable(name,args,pkey);
+    }
+
+//    public Argument parseCreateArg(ArrayList<String> query) {
+//        String name = query.get(0);
+//    }
 
 }
