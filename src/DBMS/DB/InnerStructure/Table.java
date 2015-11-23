@@ -61,6 +61,10 @@ public class Table implements Iterator<Tuple>{
         return indexes.get(index);
     }
 
+    public Map<String, BPTreeIndex> getIndexes() {
+        return indexes;
+    }
+
     public ArrayList<Tuple> getTuples() {
         return tuples;
     }

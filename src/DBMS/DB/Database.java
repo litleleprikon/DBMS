@@ -141,8 +141,13 @@ public class Database {
             }
         }
 
-        //TODO load serialised indexes
-
+        // load indexes
+        for (String sTable : database.tables.keySet()) {
+            Table table = database.tables.get(sTable);
+            for (String index : table.getIndexes().keySet()) {
+                database.scanIndex(index, sTable);
+            }
+        }
 
         return database;
     }
@@ -165,6 +170,65 @@ public class Database {
         }
     }
 
+
+    private void scanIndex(String index, String table) {
+        if (!metadata.getPages().containsKey(index)) return;
+
+        int startPage = metadata.getPage(index);
+        byte[] page = null;
+        try {
+            page = inOut.readPage(startPage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        scanIndex(index, table, page, 0);
+    }
+
+    private void scanIndex(String sIndex, String sTable, byte[] page, int i) {
+        if (page[i] == 0) {
+            int num = FileIO.getNextPage(page);
+            if (num == -1) return; //TODO exception
+            else {
+                try {
+                    page = inOut.readPage(num);
+                    i = 0;
+                    scanIndex(sIndex, sTable, page, i);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        BPTreeIndex index = tables.get(sTable).getIndex(sIndex);
+        String key = FileIO.getWord(page, i, Constants.ARGUMENTS_SEPARATOR);
+        i += key.length();
+
+        i++;
+        String value = FileIO.getWord(page, i, Constants.ARGUMENTS_SEPARATOR);
+        i += key.length();
+
+        i++;
+
+        if (index.getArguments().getType().getType().equals(Type.integer)) {
+            index.put(Integer.valueOf(key), Integer.valueOf(value));
+        } else index.put(key, Integer.valueOf(value));
+
+        if (page[i] == 0 || i == page.length - FileIO.pointerSize) { //move to the next page
+            int num = FileIO.getNextPage(page);
+            if (num != -1) {
+                try {
+                    page = inOut.readPage(num);
+                    i = 0;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        scanIndex(sIndex, sTable, page, i);
+    }
 
     private void scan(String table) {
         if (!metadata.getPages().containsKey(table)) return;
@@ -189,7 +253,19 @@ public class Database {
     }
 
     private void scan(String sTable, byte[] page, int i, boolean isCatalog) {
-        if (page[i] == 0) return; //TODO exception
+        if (page[i] == 0) {
+            int num = FileIO.getNextPage(page);
+            if (num == -1) return; //TODO exception
+            else {
+                try {
+                    page = inOut.readPage(num);
+                    i = 0;
+                    scan(sTable, page, i, isCatalog);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
         Table table = isCatalog ? catalogTables.get(sTable) : tables.get(sTable);
         Tuple tuple = new Tuple(table);
