@@ -4,6 +4,8 @@ import DBMS.DB.Database;
 import DBMS.DB.InnerStructure.Argument;
 import DBMS.DB.InnerStructure.Keys.PrimaryKey;
 import DBMS.DB.InnerStructure.Table;
+import DBMS.DB.InnerStructure.Types.Int;
+import DBMS.DB.InnerStructure.Types.VarChar;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -214,30 +216,49 @@ public class SqlParser {
 
         ArrayList<String> temp = new ArrayList<>();
 
+        int pk=0;
+
         i++;
 
         name=name.replaceAll("([\n]|[']|[\"]|[,]|[)]|[(])"," ").trim();
 
         while (i<query.length&&!isCommand(query[i])) {
-//            if (!query[i].equals("")) temp.add(query[i]);
-//            if (query[i].contains(",")) {
-//                parseCreateArg(temp);
-//                temp = new ArrayList<>();
-//            }
-            System.out.println(query[i]);
+            temp.add(query[i]);
+            if (query[i].contains("PRIMARY")) pk=temp.size()-1;
+            if (query[i].contains(",")) {
+                arguments.add(parseCreateArg(temp));
+                temp = new ArrayList<>();
+            }
             i++;
         }
 
         Argument[] args = new Argument[arguments.size()];
         arguments.toArray(args);
 
-        PrimaryKey pkey = new PrimaryKey(args[0]);
+        PrimaryKey pkey = new PrimaryKey(args[pk]);
 
         database.createTable(name,args,pkey);
     }
 
-//    public Argument parseCreateArg(ArrayList<String> query) {
-//        String name = query.get(0);
-//    }
+    public Argument parseCreateArg(ArrayList<String> query) {
+        String name = query.get(0);
+        String type;
+        Argument arg;
+        if (query.contains("INT") || query.contains("SERIAL")) type = "int";
+        else
+            type="varchar";
+        switch (type) {
+            case "int":
+                arg=new Argument(name,new Int());
+                break;
+            case "varchar":
+                arg=new Argument(name,new VarChar());
+                break;
+            default:
+                arg=new Argument(name,new Int());
+                break;
+        }
+        return arg;
+    }
 
 }
