@@ -78,11 +78,14 @@ public class Connection extends Thread {
 
     public void setDataToCursor(Table data) {
         cursors.get(lastCursor).setLastResults(data);
+        JSONObject obj = new JSONObject();
+        obj.put("Message", "Query executed");
+        successResponse(obj);
     }
 
     private void fetch(JSONObject data) {
-        int id = (int)data.get("id");
-        int num = (int)data.get("num");
+        int id = Integer.valueOf(data.get("id").toString());
+        int num = Integer.valueOf(data.get("num").toString());
         fetch(id, num);
     }
 

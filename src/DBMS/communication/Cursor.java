@@ -32,7 +32,7 @@ public class Cursor {
         JSONObject result = new JSONObject();
         JSONArray data = new JSONArray();
 
-        for(int counter = 0; counter < num-1 && lastResults.hasNext(); counter++) {
+        for(int counter = 0; counter < num && lastResults.hasNext(); counter++) {
             data.add(convertTuple(lastResults.next()));
         }
         if(!lastResults.hasNext()) {
@@ -55,7 +55,7 @@ public class Cursor {
     private JSONArray convertTuple(Tuple row) {
         JSONArray result = new JSONArray();
         for(Type value : row.getValues().values()) {
-            result.add(value.getData());
+            result.add(value == null ? null : value.getData());
         }
         return result;
     }

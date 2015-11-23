@@ -479,11 +479,15 @@ public class Database {
             
             char c;
             String id = "";
-            while (Character.isDigit(c = query.charAt(i++))) {
+            while (true) {
+                c = query.charAt(i++);
+                if(!Character.isDigit(c)) {
+                    break;
+                }
                 id += c;
             }
             
-            selectOne(Integer.valueOf(id));
+            result = selectOne(Integer.valueOf(id));
         }
 
         return result;
@@ -538,7 +542,7 @@ public class Database {
         for (Tuple tuple1 : temp1.getTuples()) {
             for (Tuple tuple2 : tables.get("publisher").getTuples()) {
                 
-                if (((Integer)tuple1.getValue("publisher").getData()).equals((Integer)(tuple2.getValue("id").getData()))) {
+                if (((Integer.valueOf((String)tuple1.getValue("publisher").getData())).equals((Integer)(tuple2.getValue("id").getData())))) {
                     Tuple tuple = new Tuple(temp2);
                     for (String str : temp2.getArguments().keySet()) {
                         if (str.equals("publisher")) {
@@ -581,6 +585,8 @@ public class Database {
                             tuple.addValue(result.getArgument(str), tuple1.getValue(str));
                         }
                     }
+
+                    result.addTuple(tuple);
                 }
             }
         }

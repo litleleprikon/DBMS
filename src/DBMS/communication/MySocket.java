@@ -24,6 +24,7 @@ public class MySocket {
         System.out.println("Waiting for communication.....");
         try {
             clientSocket = serverSocket.accept();
+            clientSocket.setSendBufferSize(20000);
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             System.out.println("Connection is established");
